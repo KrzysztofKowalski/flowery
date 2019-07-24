@@ -65,7 +65,7 @@ plotsize=2001
 
 ```
 mkdir tmp
-/cx.sh 480 648 816 tmp/ 2001
+./cx.sh 480 648 816 tmp/ 2001
 open tmp
 ```
 
