@@ -11,6 +11,8 @@ ec=$7
 m=$8
 cxdir=$9
 
+plotsize=${10}
+
 for a in `seq $sa $ea`
 do
 	aformat=`printf "%04d" $a `
@@ -24,7 +26,8 @@ do
 			x=$(( $a * $m ))
 			y=$(( $b * $m ))
 			z=$(( $c * $m ))
-			printf "%s %s %s %s %s\n" "${cxdir}/cx.sh" $x $y $z "${basedir}/image_${aformat}/${bformat}"
+			printf "%s %s %s %s %s\n" "${cxdir}/cx.sh" $x $y $z \
+				"${basedir}/image_${aformat}/${bformat}" $plotsize
 		done
 	done
 done

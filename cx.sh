@@ -6,12 +6,13 @@ set n1 = $1; set n2 = $2; set n3 = $3
 set a1 = 1.0; set a2 = 1.0; set a3 = 1.0
 set s1 = 0.0; set s2 = 0.0; set s3 = 0.0
 set output = $4
-if ($#argv >= 5) set a1 = $5
-if ($#argv >= 6) set a2 = $6
-if ($#argv >= 7) set a3 = $7
-if ($#argv >= 8) set s1 = $8
-if ($#argv >= 9) set s2 = $9
-if ($#argv >= 10) set s3 = ${10}
+set samples = $5
+if ($#argv >= 6) set a1 = $6
+if ($#argv >= 7) set a2 = $7
+if ($#argv >= 8) set a3 = $8
+if ($#argv >= 9) set s1 = $9
+if ($#argv >= 10) set s2 = ${10}
+if ($#argv >= 11) set s3 = ${11}
 
 
 set aformat = `printf "%04d" $n1`
@@ -45,7 +46,7 @@ cat <<EOF | gnuplot
  set terminal svg size 777,777
  set output "${fname}"
 #
- set samples 2001
+ set samples ${samples}
  plot [t=0:1] real(z(t)),imag(z(t))
 EOF
 

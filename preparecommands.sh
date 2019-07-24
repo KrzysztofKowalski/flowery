@@ -6,6 +6,8 @@ imgdir=$2
 mkdir -p $basedir 
 mkdir -p $imgdir
 
+plotsize=2001
+
 for a in `seq 0 100`
 do
 	aformat=`printf "%04d" $a `
@@ -25,7 +27,7 @@ do
 		increment=1
 		
 		output="${commanddir}/${bformat}.sh"
-		./runner.sh $imgdir $x $y $z $g $h $j $increment $basedir > $output
+		./runner.sh $imgdir $x $y $z $g $h $j $increment $basedir $plotsize > $output
 		chmod +x $output
 	done
 done
