@@ -58,9 +58,14 @@ open samples
 
 ## To generate just 1 image
 
+x=480
+y=648
+z=816
+plotsize=2001
+
 ```
 mkdir tmp
-/cx.sh 480 648 874 tmp/
+/cx.sh 480 648 816 tmp/ 2001
 open tmp
 ```
 
