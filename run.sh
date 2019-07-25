@@ -1,17 +1,17 @@
 #!/usr/bin/env dash
 
-printf "%s" "Cleaniing..."
+printf "%s\n" "Cleaning..."
 
 time rm -fr out; 
 
-printf "%s" "Cleaned!"
+printf "%s\n" "Cleaned!"
 
-printf "%s" "Generation"
+printf "%s\n" "Generation"
 
 time ./preparecommands.sh `pwd` out/images; 
 
-printf "%s" "Commands ready"
+printf "%s\n" "Commands ready"
 
-printf "%s" "Launching"
+printf "%s\n" "Launching"
 
 time ./launch.sh 
