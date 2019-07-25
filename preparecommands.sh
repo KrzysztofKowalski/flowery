@@ -17,4 +17,4 @@ do
 	printf "%s %s %s\n" ./subprepare.sh $a $plotsize >> $cmf
 done
 
-parallel -j 48 --bar --progress --eta < $cmf
+parallel -j 12 --bar --progress --eta < $cmf
