@@ -21,7 +21,7 @@ set bformat = `printf "%04d" $n2`
 
 set cformat = `printf "%04d" $n3`
 
-set fname = "${output}/spiro-${aformat}-${bformat}-${cformat}.svg"
+set fname = "${output}/spiro-${aformat}-${bformat}-${cformat}-${samples}.svg"
 
 #printf %s $fname
 
