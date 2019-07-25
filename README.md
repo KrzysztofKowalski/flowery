@@ -75,14 +75,6 @@ https://linuxgazette.net/133/luana.html
 
 ## Samples
 
-Values: Values: Klucze
-
-![Values: Klucze](./samples/Klucze)
-
-Values: Values: Licencyjne
-
-![Values: Licencyjne](./samples/Licencyjne.pages)
-
 Values: Values: 0001 0121 0011
 
 ![Values: 0001 0121 0011](./samples/spiro-0001-0121-0011.svg)
