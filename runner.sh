@@ -26,7 +26,7 @@ do
 			x=$(( $a * $m ))
 			y=$(( $b * $m ))
 			z=$(( $c * $m ))
-			printf "%s %s %s %s %s\n" "${cxdir}/cx.sh" $x $y $z \
+			printf "%s %s %s %s %s %s\n" "${cxdir}/cx.sh" $x $y $z \
 				"${basedir}/image_${aformat}/${bformat}" $plotsize
 		done
 	done
