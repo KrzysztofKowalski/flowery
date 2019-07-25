@@ -18,8 +18,8 @@ do
 		
 		mkdir -p $commanddir
 		
-		x=$(( $a * 10 + 1 ))
-		y=$(( $b * 10 + 1 ))
+		x=$(( $a ))
+		y=$(( $b ))
 		z=1
 		g=$x
 		h=$y
