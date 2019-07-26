@@ -2,26 +2,21 @@
 
 a=$1
 plotsize=$2
-
+sb=$3
+zb=$4
+basedir=$5
 aformat=`printf "%04d" $a `
-for b in `seq 0 100`
+increment=1
+z=1
+j=999
+
+for b in `seq $sb $zb`
 do
 	bformat=`printf "%04d" $b`
 	commanddir="out/commands/${aformat}/"
-	
 	mkdir -p $commanddir
-	
-	x=$(( $a ))
-	y=$(( $b ))
-	z=1
-	g=$x
-	h=$y
-	j=999
-	increment=1
-	
 	output="${commanddir}/${bformat}.sh"
-	
-	./runner.sh $imgdir $x $y $z $g $h $j $increment $basedir $plotsize > $output
-	
+	printf "%s\n" "#!/usr/bin/env dash" > $output
+	./runner.sh $imgdir $a $b $z $a $b $j $increment $basedir $plotsize >> $output
 	chmod +x $output
 done
