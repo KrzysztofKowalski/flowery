@@ -2,13 +2,20 @@
 
 a=$1
 plotsize=$2
+
 sb=$3
 zb=$4
+
 basedir=$5
+imgdir=$6
+
 aformat=`printf "%04d" $a `
+
 increment=1
 z=1
 j=999
+
+printf "A=%s P=%s SB=%s ZB=%s BA=%s I=%s" $a $plotsize $sb $zb $basedir $imgdir
 
 for b in `seq $sb $zb`
 do
