@@ -13,7 +13,7 @@ aformat=`printf "%04d" $a `
 
 increment=1
 z=1
-j=999
+j=$7
 
 printf "A=%s P=%s SB=%s ZB=%s BA=%s I=%s" $a $plotsize $sb $zb $basedir $imgdir
 

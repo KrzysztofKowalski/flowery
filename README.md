@@ -75,799 +75,311 @@ https://linuxgazette.net/133/luana.html
 
 ## Samples
 
-Values: Values: 0001 0121 0011
+Values: Values: 0001 0001 0284
 
-![Values: 0001 0121 0011](./samples/spiro-0001-0121-0011.svg)
+![Values: 0001 0001 0284](./samples/spiro-0001-0001-0284-2001.svg)
 
-Values: Values: 0001 0121 0016
+Values: Values: 0001 0001 0331
 
-![Values: 0001 0121 0016](./samples/spiro-0001-0121-0016.svg)
+![Values: 0001 0001 0331](./samples/spiro-0001-0001-0331-2001.svg)
 
-Values: Values: 0001 0121 0039
+Values: Values: 0001 0001 0332
 
-![Values: 0001 0121 0039](./samples/spiro-0001-0121-0039.svg)
+![Values: 0001 0001 0332](./samples/spiro-0001-0001-0332-2001.svg)
 
-Values: Values: 0001 0121 0040
+Values: Values: 0001 0001 0333
 
-![Values: 0001 0121 0040](./samples/spiro-0001-0121-0040.svg)
+![Values: 0001 0001 0333](./samples/spiro-0001-0001-0333-2001.svg)
 
-Values: Values: 0001 0121 0059
+Values: Values: 0001 0001 0363
 
-![Values: 0001 0121 0059](./samples/spiro-0001-0121-0059.svg)
+![Values: 0001 0001 0363](./samples/spiro-0001-0001-0363-2001.svg)
 
-Values: Values: 0001 0121 0060
+Values: Values: 0001 0001 0398
 
-![Values: 0001 0121 0060](./samples/spiro-0001-0121-0060.svg)
+![Values: 0001 0001 0398](./samples/spiro-0001-0001-0398-2001.svg)
 
-Values: Values: 0001 0121 0074
+Values: Values: 0001 0001 0399
 
-![Values: 0001 0121 0074](./samples/spiro-0001-0121-0074.svg)
+![Values: 0001 0001 0399](./samples/spiro-0001-0001-0399-2001.svg)
 
-Values: Values: 0001 0121 0082
+Values: Values: 0001 0001 0400
 
-![Values: 0001 0121 0082](./samples/spiro-0001-0121-0082.svg)
+![Values: 0001 0001 0400](./samples/spiro-0001-0001-0400-2001.svg)
 
-Values: Values: 0001 0121 0084
+Values: Values: 0001 0001 0443
 
-![Values: 0001 0121 0084](./samples/spiro-0001-0121-0084.svg)
+![Values: 0001 0001 0443](./samples/spiro-0001-0001-0443-2001.svg)
 
-Values: Values: 0001 0121 0092
+Values: Values: 0001 0001 0444
 
-![Values: 0001 0121 0092](./samples/spiro-0001-0121-0092.svg)
+![Values: 0001 0001 0444](./samples/spiro-0001-0001-0444-2001.svg)
 
-Values: Values: 0001 0121 0093
+Values: Values: 0001 0001 0445
 
-![Values: 0001 0121 0093](./samples/spiro-0001-0121-0093.svg)
+![Values: 0001 0001 0445](./samples/spiro-0001-0001-0445-2001.svg)
 
-Values: Values: 0001 0121 0094
+Values: Values: 0001 0001 0446
 
-![Values: 0001 0121 0094](./samples/spiro-0001-0121-0094.svg)
+![Values: 0001 0001 0446](./samples/spiro-0001-0001-0446-2001.svg)
 
-Values: Values: 0001 0121 0098
+Values: Values: 0001 0001 0447
 
-![Values: 0001 0121 0098](./samples/spiro-0001-0121-0098.svg)
+![Values: 0001 0001 0447](./samples/spiro-0001-0001-0447-2001.svg)
 
-Values: Values: 0001 0121 0109
+Values: Values: 0001 0001 0463
 
-![Values: 0001 0121 0109](./samples/spiro-0001-0121-0109.svg)
+![Values: 0001 0001 0463](./samples/spiro-0001-0001-0463-2001.svg)
 
-Values: Values: 0001 0121 0115
+Values: Values: 0001 0001 0464
 
-![Values: 0001 0121 0115](./samples/spiro-0001-0121-0115.svg)
+![Values: 0001 0001 0464](./samples/spiro-0001-0001-0464-2001.svg)
 
-Values: Values: 0001 0121 0116
+Values: Values: 0001 0001 0495
 
-![Values: 0001 0121 0116](./samples/spiro-0001-0121-0116.svg)
+![Values: 0001 0001 0495](./samples/spiro-0001-0001-0495-2001.svg)
 
-Values: Values: 0001 0121 0118
+Values: Values: 0001 0001 0496
 
-![Values: 0001 0121 0118](./samples/spiro-0001-0121-0118.svg)
+![Values: 0001 0001 0496](./samples/spiro-0001-0001-0496-2001.svg)
 
-Values: Values: 0001 0121 0125
+Values: Values: 0001 0001 0498
 
-![Values: 0001 0121 0125](./samples/spiro-0001-0121-0125.svg)
+![Values: 0001 0001 0498](./samples/spiro-0001-0001-0498-2001.svg)
 
-Values: Values: 0001 0121 0129
+Values: Values: 0001 0001 0499
 
-![Values: 0001 0121 0129](./samples/spiro-0001-0121-0129.svg)
+![Values: 0001 0001 0499](./samples/spiro-0001-0001-0499-2001.svg)
 
-Values: Values: 0001 0121 0130
+Values: Values: 0001 0001 0500
 
-![Values: 0001 0121 0130](./samples/spiro-0001-0121-0130.svg)
+![Values: 0001 0001 0500](./samples/spiro-0001-0001-0500-2001.svg)
 
-Values: Values: 0001 0121 0131
+Values: Values: 0001 0001 0501
 
-![Values: 0001 0121 0131](./samples/spiro-0001-0121-0131.svg)
+![Values: 0001 0001 0501](./samples/spiro-0001-0001-0501-2001.svg)
 
-Values: Values: 0001 0121 0136
+Values: Values: 0001 0001 0502
 
-![Values: 0001 0121 0136](./samples/spiro-0001-0121-0136.svg)
+![Values: 0001 0001 0502](./samples/spiro-0001-0001-0502-2001.svg)
 
-Values: Values: 0001 0121 0140
+Values: Values: 0001 0001 0503
 
-![Values: 0001 0121 0140](./samples/spiro-0001-0121-0140.svg)
+![Values: 0001 0001 0503](./samples/spiro-0001-0001-0503-2001.svg)
 
-Values: Values: 0001 0121 0144
+Values: Values: 0001 0001 0545
 
-![Values: 0001 0121 0144](./samples/spiro-0001-0121-0144.svg)
+![Values: 0001 0001 0545](./samples/spiro-0001-0001-0545-2001.svg)
 
-Values: Values: 0001 0121 0160
+Values: Values: 0001 0001 0547
 
-![Values: 0001 0121 0160](./samples/spiro-0001-0121-0160.svg)
+![Values: 0001 0001 0547](./samples/spiro-0001-0001-0547-2001.svg)
 
-Values: Values: 0001 0121 0163
+Values: Values: 0001 0001 0548
 
-![Values: 0001 0121 0163](./samples/spiro-0001-0121-0163.svg)
+![Values: 0001 0001 0548](./samples/spiro-0001-0001-0548-2001.svg)
 
-Values: Values: 0001 0121 0171
+Values: Values: 0001 0001 0570
 
-![Values: 0001 0121 0171](./samples/spiro-0001-0121-0171.svg)
+![Values: 0001 0001 0570](./samples/spiro-0001-0001-0570-2001.svg)
 
-Values: Values: 0001 0121 0183
+Values: Values: 0001 0001 0571
 
-![Values: 0001 0121 0183](./samples/spiro-0001-0121-0183.svg)
+![Values: 0001 0001 0571](./samples/spiro-0001-0001-0571-2001.svg)
 
-Values: Values: 0001 0121 0203
+Values: Values: 0001 0001 0572
 
-![Values: 0001 0121 0203](./samples/spiro-0001-0121-0203.svg)
+![Values: 0001 0001 0572](./samples/spiro-0001-0001-0572-2001.svg)
 
-Values: Values: 0001 0121 0216
+Values: Values: 0001 0001 0573
 
-![Values: 0001 0121 0216](./samples/spiro-0001-0121-0216.svg)
+![Values: 0001 0001 0573](./samples/spiro-0001-0001-0573-2001.svg)
 
-Values: Values: 0001 0121 0220
+Values: Values: 0001 0001 0574
 
-![Values: 0001 0121 0220](./samples/spiro-0001-0121-0220.svg)
+![Values: 0001 0001 0574](./samples/spiro-0001-0001-0574-2001.svg)
 
-Values: Values: 0001 0121 0235
+Values: Values: 0001 0001 0602
 
-![Values: 0001 0121 0235](./samples/spiro-0001-0121-0235.svg)
+![Values: 0001 0001 0602](./samples/spiro-0001-0001-0602-2001.svg)
 
-Values: Values: 0001 0121 0236
+Values: Values: 0001 0001 0661
 
-![Values: 0001 0121 0236](./samples/spiro-0001-0121-0236.svg)
+![Values: 0001 0001 0661](./samples/spiro-0001-0001-0661-2001.svg)
 
-Values: Values: 0001 0121 0237
+Values: Values: 0001 0001 0662
 
-![Values: 0001 0121 0237](./samples/spiro-0001-0121-0237.svg)
+![Values: 0001 0001 0662](./samples/spiro-0001-0001-0662-2001.svg)
 
-Values: Values: 0001 0121 0238
+Values: Values: 0001 0001 0663
 
-![Values: 0001 0121 0238](./samples/spiro-0001-0121-0238.svg)
+![Values: 0001 0001 0663](./samples/spiro-0001-0001-0663-2001.svg)
 
-Values: Values: 0001 0121 0239
+Values: Values: 0001 0001 0664
 
-![Values: 0001 0121 0239](./samples/spiro-0001-0121-0239.svg)
+![Values: 0001 0001 0664](./samples/spiro-0001-0001-0664-2001.svg)
 
-Values: Values: 0001 0121 0244
+Values: Values: 0001 0001 0665
 
-![Values: 0001 0121 0244](./samples/spiro-0001-0121-0244.svg)
+![Values: 0001 0001 0665](./samples/spiro-0001-0001-0665-2001.svg)
 
-Values: Values: 0001 0121 0245
+Values: Values: 0001 0001 0666
 
-![Values: 0001 0121 0245](./samples/spiro-0001-0121-0245.svg)
+![Values: 0001 0001 0666](./samples/spiro-0001-0001-0666-2001.svg)
 
-Values: Values: 0001 0121 0246
+Values: Values: 0001 0001 0667
 
-![Values: 0001 0121 0246](./samples/spiro-0001-0121-0246.svg)
+![Values: 0001 0001 0667](./samples/spiro-0001-0001-0667-2001.svg)
 
-Values: Values: 0001 0121 0247
+Values: Values: 0001 0001 0668
 
-![Values: 0001 0121 0247](./samples/spiro-0001-0121-0247.svg)
+![Values: 0001 0001 0668](./samples/spiro-0001-0001-0668-2001.svg)
 
-Values: Values: 0001 0121 0280
+Values: Values: 0001 0001 0669
 
-![Values: 0001 0121 0280](./samples/spiro-0001-0121-0280.svg)
+![Values: 0001 0001 0669](./samples/spiro-0001-0001-0669-2001.svg)
 
-Values: Values: 0001 0121 0304
+Values: Values: 0001 0001 0670
 
-![Values: 0001 0121 0304](./samples/spiro-0001-0121-0304.svg)
+![Values: 0001 0001 0670](./samples/spiro-0001-0001-0670-2001.svg)
 
-Values: Values: 0001 0121 0305
+Values: Values: 0001 0001 0671
 
-![Values: 0001 0121 0305](./samples/spiro-0001-0121-0305.svg)
+![Values: 0001 0001 0671](./samples/spiro-0001-0001-0671-2001.svg)
 
-Values: Values: 0001 0121 0321
+Values: Values: 0001 0001 0672
 
-![Values: 0001 0121 0321](./samples/spiro-0001-0121-0321.svg)
+![Values: 0001 0001 0672](./samples/spiro-0001-0001-0672-2001.svg)
 
-Values: Values: 0001 0121 0336
+Values: Values: 0001 0001 0716
 
-![Values: 0001 0121 0336](./samples/spiro-0001-0121-0336.svg)
+![Values: 0001 0001 0716](./samples/spiro-0001-0001-0716-2001.svg)
 
-Values: Values: 0001 0121 0359
+Values: Values: 0001 0001 0727
 
-![Values: 0001 0121 0359](./samples/spiro-0001-0121-0359.svg)
+![Values: 0001 0001 0727](./samples/spiro-0001-0001-0727-2001.svg)
 
-Values: Values: 0001 0121 0363
+Values: Values: 0001 0001 0728
 
-![Values: 0001 0121 0363](./samples/spiro-0001-0121-0363.svg)
+![Values: 0001 0001 0728](./samples/spiro-0001-0001-0728-2001.svg)
 
-Values: Values: 0001 0121 0365
+Values: Values: 0001 0001 0729
 
-![Values: 0001 0121 0365](./samples/spiro-0001-0121-0365.svg)
+![Values: 0001 0001 0729](./samples/spiro-0001-0001-0729-2001.svg)
 
-Values: Values: 0001 0121 0366
+Values: Values: 0001 0001 0730
 
-![Values: 0001 0121 0366](./samples/spiro-0001-0121-0366.svg)
+![Values: 0001 0001 0730](./samples/spiro-0001-0001-0730-2001.svg)
 
-Values: Values: 0001 0121 0367
+Values: Values: 0001 0001 0752
 
-![Values: 0001 0121 0367](./samples/spiro-0001-0121-0367.svg)
+![Values: 0001 0001 0752](./samples/spiro-0001-0001-0752-2001.svg)
 
-Values: Values: 0001 0121 0368
+Values: Values: 0001 0001 0798
 
-![Values: 0001 0121 0368](./samples/spiro-0001-0121-0368.svg)
+![Values: 0001 0001 0798](./samples/spiro-0001-0001-0798-2001.svg)
 
-Values: Values: 0001 0121 0441
+Values: Values: 0001 0001 0799
 
-![Values: 0001 0121 0441](./samples/spiro-0001-0121-0441.svg)
+![Values: 0001 0001 0799](./samples/spiro-0001-0001-0799-2001.svg)
 
-Values: Values: 0001 0121 0478
+Values: Values: 0001 0001 0800
 
-![Values: 0001 0121 0478](./samples/spiro-0001-0121-0478.svg)
+![Values: 0001 0001 0800](./samples/spiro-0001-0001-0800-2001.svg)
 
-Values: Values: 0001 0121 0481
+Values: Values: 0001 0001 0801
 
-![Values: 0001 0121 0481](./samples/spiro-0001-0121-0481.svg)
+![Values: 0001 0001 0801](./samples/spiro-0001-0001-0801-2001.svg)
 
-Values: Values: 0001 0121 0485
+Values: Values: 0001 0001 0802
 
-![Values: 0001 0121 0485](./samples/spiro-0001-0121-0485.svg)
+![Values: 0001 0001 0802](./samples/spiro-0001-0001-0802-2001.svg)
 
-Values: Values: 0001 0121 0486
+Values: Values: 0001 0001 0835
 
-![Values: 0001 0121 0486](./samples/spiro-0001-0121-0486.svg)
+![Values: 0001 0001 0835](./samples/spiro-0001-0001-0835-2001.svg)
 
-Values: Values: 0001 0121 0487
+Values: Values: 0001 0001 0855
 
-![Values: 0001 0121 0487](./samples/spiro-0001-0121-0487.svg)
+![Values: 0001 0001 0855](./samples/spiro-0001-0001-0855-2001.svg)
 
-Values: Values: 0001 0121 0488
+Values: Values: 0001 0001 0856
 
-![Values: 0001 0121 0488](./samples/spiro-0001-0121-0488.svg)
+![Values: 0001 0001 0856](./samples/spiro-0001-0001-0856-2001.svg)
 
-Values: Values: 0001 0121 0489
+Values: Values: 0001 0001 0857
 
-![Values: 0001 0121 0489](./samples/spiro-0001-0121-0489.svg)
+![Values: 0001 0001 0857](./samples/spiro-0001-0001-0857-2001.svg)
 
-Values: Values: 0001 0121 0499
+Values: Values: 0001 0001 0859
 
-![Values: 0001 0121 0499](./samples/spiro-0001-0121-0499.svg)
+![Values: 0001 0001 0859](./samples/spiro-0001-0001-0859-2001.svg)
 
-Values: Values: 0001 0121 0505
+Values: Values: 0001 0001 0860
 
-![Values: 0001 0121 0505](./samples/spiro-0001-0121-0505.svg)
+![Values: 0001 0001 0860](./samples/spiro-0001-0001-0860-2001.svg)
 
-Values: Values: 0001 0121 0521
+Values: Values: 0001 0001 0886
 
-![Values: 0001 0121 0521](./samples/spiro-0001-0121-0521.svg)
+![Values: 0001 0001 0886](./samples/spiro-0001-0001-0886-2001.svg)
 
-Values: Values: 0001 0121 0545
+Values: Values: 0001 0001 0887
 
-![Values: 0001 0121 0545](./samples/spiro-0001-0121-0545.svg)
+![Values: 0001 0001 0887](./samples/spiro-0001-0001-0887-2001.svg)
 
-Values: Values: 0001 0121 0585
+Values: Values: 0001 0001 0889
 
-![Values: 0001 0121 0585](./samples/spiro-0001-0121-0585.svg)
+![Values: 0001 0001 0889](./samples/spiro-0001-0001-0889-2001.svg)
 
-Values: Values: 0001 0121 0586
+Values: Values: 0001 0001 0891
 
-![Values: 0001 0121 0586](./samples/spiro-0001-0121-0586.svg)
+![Values: 0001 0001 0891](./samples/spiro-0001-0001-0891-2001.svg)
 
-Values: Values: 0001 0121 0605
+Values: Values: 0001 0001 0911
 
-![Values: 0001 0121 0605](./samples/spiro-0001-0121-0605.svg)
+![Values: 0001 0001 0911](./samples/spiro-0001-0001-0911-2001.svg)
 
-Values: Values: 0001 0121 0606
+Values: Values: 0001 0001 0912
 
-![Values: 0001 0121 0606](./samples/spiro-0001-0121-0606.svg)
+![Values: 0001 0001 0912](./samples/spiro-0001-0001-0912-2001.svg)
 
-Values: Values: 0001 0121 0607
+Values: Values: 0001 0001 0925
 
-![Values: 0001 0121 0607](./samples/spiro-0001-0121-0607.svg)
+![Values: 0001 0001 0925](./samples/spiro-0001-0001-0925-2001.svg)
 
-Values: Values: 0001 0121 0626
+Values: Values: 0001 0001 0935
 
-![Values: 0001 0121 0626](./samples/spiro-0001-0121-0626.svg)
+![Values: 0001 0001 0935](./samples/spiro-0001-0001-0935-2001.svg)
 
-Values: Values: 0001 0121 0654
+Values: Values: 0001 0001 0939
 
-![Values: 0001 0121 0654](./samples/spiro-0001-0121-0654.svg)
+![Values: 0001 0001 0939](./samples/spiro-0001-0001-0939-2001.svg)
 
-Values: Values: 0001 0121 0666
+Values: Values: 0001 0001 0943
 
-![Values: 0001 0121 0666](./samples/spiro-0001-0121-0666.svg)
+![Values: 0001 0001 0943](./samples/spiro-0001-0001-0943-2001.svg)
 
-Values: Values: 0001 0121 0667
+Values: Values: 0001 0001 0994
 
-![Values: 0001 0121 0667](./samples/spiro-0001-0121-0667.svg)
+![Values: 0001 0001 0994](./samples/spiro-0001-0001-0994-2001.svg)
 
-Values: Values: 0001 0121 0680
+Values: Values: 0001 0001 0995
 
-![Values: 0001 0121 0680](./samples/spiro-0001-0121-0680.svg)
+![Values: 0001 0001 0995](./samples/spiro-0001-0001-0995-2001.svg)
 
-Values: Values: 0001 0121 0683
+Values: Values: 0001 0001 0996
 
-![Values: 0001 0121 0683](./samples/spiro-0001-0121-0683.svg)
+![Values: 0001 0001 0996](./samples/spiro-0001-0001-0996-2001.svg)
 
-Values: Values: 0001 0121 0695
+Values: Values: 0001 0001 0997
 
-![Values: 0001 0121 0695](./samples/spiro-0001-0121-0695.svg)
+![Values: 0001 0001 0997](./samples/spiro-0001-0001-0997-2001.svg)
 
-Values: Values: 0001 0121 0698
+Values: Values: 0001 0001 0998
 
-![Values: 0001 0121 0698](./samples/spiro-0001-0121-0698.svg)
+![Values: 0001 0001 0998](./samples/spiro-0001-0001-0998-2001.svg)
 
-Values: Values: 0001 0121 0701
+Values: Values: 0001 0001 0999
 
-![Values: 0001 0121 0701](./samples/spiro-0001-0121-0701.svg)
-
-Values: Values: 0001 0121 0706
-
-![Values: 0001 0121 0706](./samples/spiro-0001-0121-0706.svg)
-
-Values: Values: 0001 0121 0727
-
-![Values: 0001 0121 0727](./samples/spiro-0001-0121-0727.svg)
-
-Values: Values: 0001 0121 0746
-
-![Values: 0001 0121 0746](./samples/spiro-0001-0121-0746.svg)
-
-Values: Values: 0001 0121 0751
-
-![Values: 0001 0121 0751](./samples/spiro-0001-0121-0751.svg)
-
-Values: Values: 0001 0121 0756
-
-![Values: 0001 0121 0756](./samples/spiro-0001-0121-0756.svg)
-
-Values: Values: 0001 0121 0757
-
-![Values: 0001 0121 0757](./samples/spiro-0001-0121-0757.svg)
-
-Values: Values: 0001 0121 0761
-
-![Values: 0001 0121 0761](./samples/spiro-0001-0121-0761.svg)
-
-Values: Values: 0001 0121 0776
-
-![Values: 0001 0121 0776](./samples/spiro-0001-0121-0776.svg)
-
-Values: Values: 0001 0121 0787
-
-![Values: 0001 0121 0787](./samples/spiro-0001-0121-0787.svg)
-
-Values: Values: 0001 0121 0788
-
-![Values: 0001 0121 0788](./samples/spiro-0001-0121-0788.svg)
-
-Values: Values: 0001 0121 0791
-
-![Values: 0001 0121 0791](./samples/spiro-0001-0121-0791.svg)
-
-Values: Values: 0001 0121 0800
-
-![Values: 0001 0121 0800](./samples/spiro-0001-0121-0800.svg)
-
-Values: Values: 0001 0121 0816
-
-![Values: 0001 0121 0816](./samples/spiro-0001-0121-0816.svg)
-
-Values: Values: 0001 0121 0817
-
-![Values: 0001 0121 0817](./samples/spiro-0001-0121-0817.svg)
-
-Values: Values: 0001 0121 0829
-
-![Values: 0001 0121 0829](./samples/spiro-0001-0121-0829.svg)
-
-Values: Values: 0001 0121 0848
-
-![Values: 0001 0121 0848](./samples/spiro-0001-0121-0848.svg)
-
-Values: Values: 0001 0121 0849
-
-![Values: 0001 0121 0849](./samples/spiro-0001-0121-0849.svg)
-
-Values: Values: 0001 0121 0877
-
-![Values: 0001 0121 0877](./samples/spiro-0001-0121-0877.svg)
-
-Values: Values: 0001 0121 0878
-
-![Values: 0001 0121 0878](./samples/spiro-0001-0121-0878.svg)
-
-Values: Values: 0001 0121 0898
-
-![Values: 0001 0121 0898](./samples/spiro-0001-0121-0898.svg)
-
-Values: Values: 0001 0121 0908
-
-![Values: 0001 0121 0908](./samples/spiro-0001-0121-0908.svg)
-
-Values: Values: 0001 0121 0909
-
-![Values: 0001 0121 0909](./samples/spiro-0001-0121-0909.svg)
-
-Values: Values: 0001 0121 0919
-
-![Values: 0001 0121 0919](./samples/spiro-0001-0121-0919.svg)
-
-Values: Values: 0001 0121 0938
-
-![Values: 0001 0121 0938](./samples/spiro-0001-0121-0938.svg)
-
-Values: Values: 0001 0121 0939
-
-![Values: 0001 0121 0939](./samples/spiro-0001-0121-0939.svg)
-
-Values: Values: 0001 0121 0959
-
-![Values: 0001 0121 0959](./samples/spiro-0001-0121-0959.svg)
-
-Values: Values: 0001 0121 0961
-
-![Values: 0001 0121 0961](./samples/spiro-0001-0121-0961.svg)
-
-Values: Values: 0001 0121 0968
-
-![Values: 0001 0121 0968](./samples/spiro-0001-0121-0968.svg)
-
-Values: Values: 0001 0121 0969
-
-![Values: 0001 0121 0969](./samples/spiro-0001-0121-0969.svg)
-
-Values: Values: 0001 0121 0970
-
-![Values: 0001 0121 0970](./samples/spiro-0001-0121-0970.svg)
-
-Values: Values: 0001 0121 0979
-
-![Values: 0001 0121 0979](./samples/spiro-0001-0121-0979.svg)
-
-Values: Values: 0001 0121 0993
-
-![Values: 0001 0121 0993](./samples/spiro-0001-0121-0993.svg)
-
-Values: Values: 0001 0121 0995
-
-![Values: 0001 0121 0995](./samples/spiro-0001-0121-0995.svg)
-
-Values: Values: 0001 0121 0996
-
-![Values: 0001 0121 0996](./samples/spiro-0001-0121-0996.svg)
-
-Values: Values: 0001 0121 0997
-
-![Values: 0001 0121 0997](./samples/spiro-0001-0121-0997.svg)
-
-Values: Values: 0001 0121 0999
-
-![Values: 0001 0121 0999](./samples/spiro-0001-0121-0999.svg)
-
-Values: Values: 0024 0120 0120
-
-![Values: 0024 0120 0120](./samples/spiro-0024-0120-0120.svg)
-
-Values: Values: 0024 0120 0216
-
-![Values: 0024 0120 0216](./samples/spiro-0024-0120-0216.svg)
-
-Values: Values: 0033 0198 0198
-
-![Values: 0033 0198 0198](./samples/spiro-0033-0198-0198.svg)
-
-Values: Values: 0033 0198 0363
-
-![Values: 0033 0198 0363](./samples/spiro-0033-0198-0363.svg)
-
-Values: Values: 0033 0198 0759
-
-![Values: 0033 0198 0759](./samples/spiro-0033-0198-0759.svg)
-
-Values: Values: 0033 0264 0495
-
-![Values: 0033 0264 0495](./samples/spiro-0033-0264-0495.svg)
-
-Values: Values: 0033 0264 1056
-
-![Values: 0033 0264 1056](./samples/spiro-0033-0264-1056.svg)
-
-Values: Values: 0033 0264 1089
-
-![Values: 0033 0264 1089](./samples/spiro-0033-0264-1089.svg)
-
-Values: Values: 0033 0330 0627
-
-![Values: 0033 0330 0627](./samples/spiro-0033-0330-0627.svg)
-
-Values: Values: 0033 0363 0363
-
-![Values: 0033 0363 0363](./samples/spiro-0033-0363-0363.svg)
-
-Values: Values: 0033 0528 0495
-
-![Values: 0033 0528 0495](./samples/spiro-0033-0528-0495.svg)
-
-Values: Values: 0033 0528 0528
-
-![Values: 0033 0528 0528](./samples/spiro-0033-0528-0528.svg)
-
-Values: Values: 0033 0561 1089
-
-![Values: 0033 0561 1089](./samples/spiro-0033-0561-1089.svg)
-
-Values: Values: 0033 0627 0033
-
-![Values: 0033 0627 0033](./samples/spiro-0033-0627-0033.svg)
-
-Values: Values: 0033 0726 0726
-
-![Values: 0033 0726 0726](./samples/spiro-0033-0726-0726.svg)
-
-Values: Values: 0033 0726 0825
-
-![Values: 0033 0726 0825](./samples/spiro-0033-0726-0825.svg)
-
-Values: Values: 0033 0792 0891
-
-![Values: 0033 0792 0891](./samples/spiro-0033-0792-0891.svg)
-
-Values: Values: 0033 0825 0231
-
-![Values: 0033 0825 0231](./samples/spiro-0033-0825-0231.svg)
-
-Values: Values: 0033 0825 0561
-
-![Values: 0033 0825 0561](./samples/spiro-0033-0825-0561.svg)
-
-Values: Values: 0033 0924 0132
-
-![Values: 0033 0924 0132](./samples/spiro-0033-0924-0132.svg)
-
-Values: Values: 0033 0924 0924
-
-![Values: 0033 0924 0924](./samples/spiro-0033-0924-0924.svg)
-
-Values: Values: 0033 1056 0033
-
-![Values: 0033 1056 0033](./samples/spiro-0033-1056-0033.svg)
-
-Values: Values: 0072 0264 0072
-
-![Values: 0072 0264 0072](./samples/spiro-0072-0264-0072.svg)
-
-Values: Values: 0072 0264 0264
-
-![Values: 0072 0264 0264](./samples/spiro-0072-0264-0264.svg)
-
-Values: Values: 0072 0312 0312
-
-![Values: 0072 0312 0312](./samples/spiro-0072-0312-0312.svg)
-
-Values: Values: 0072 0312 0792
-
-![Values: 0072 0312 0792](./samples/spiro-0072-0312-0792.svg)
-
-Values: Values: 0072 0336 0072
-
-![Values: 0072 0336 0072](./samples/spiro-0072-0336-0072.svg)
-
-Values: Values: 0072 0336 0336
-
-![Values: 0072 0336 0336](./samples/spiro-0072-0336-0336.svg)
-
-Values: Values: 0072 0336 0888
-
-![Values: 0072 0336 0888](./samples/spiro-0072-0336-0888.svg)
-
-Values: Values: 0072 0360 0360
-
-![Values: 0072 0360 0360](./samples/spiro-0072-0360-0360.svg)
-
-Values: Values: 0144 0360 0144
-
-![Values: 0144 0360 0144](./samples/spiro-0144-0360-0144.svg)
-
-Values: Values: 0144 0360 0576
-
-![Values: 0144 0360 0576](./samples/spiro-0144-0360-0576.svg)
-
-Values: Values: 0144 0360 0720
-
-![Values: 0144 0360 0720](./samples/spiro-0144-0360-0720.svg)
-
-Values: Values: 0144 0384 0144
-
-![Values: 0144 0384 0144](./samples/spiro-0144-0384-0144.svg)
-
-Values: Values: 0144 0384 0384
-
-![Values: 0144 0384 0384](./samples/spiro-0144-0384-0384.svg)
-
-Values: Values: 0144 0384 0744
-
-![Values: 0144 0384 0744](./samples/spiro-0144-0384-0744.svg)
-
-Values: Values: 0144 0408 0144
-
-![Values: 0144 0408 0144](./samples/spiro-0144-0408-0144.svg)
-
-Values: Values: 0144 0408 0408
-
-![Values: 0144 0408 0408](./samples/spiro-0144-0408-0408.svg)
-
-Values: Values: 0144 0408 0672
-
-![Values: 0144 0408 0672](./samples/spiro-0144-0408-0672.svg)
-
-Values: Values: 0144 0528 0120
-
-![Values: 0144 0528 0120](./samples/spiro-0144-0528-0120.svg)
-
-Values: Values: 0231 0297 0528
-
-![Values: 0231 0297 0528](./samples/spiro-0231-0297-0528.svg)
-
-Values: Values: 0231 0297 0594
-
-![Values: 0231 0297 0594](./samples/spiro-0231-0297-0594.svg)
-
-Values: Values: 0231 0330 0330
-
-![Values: 0231 0330 0330](./samples/spiro-0231-0330-0330.svg)
-
-Values: Values: 0231 0363 0231
-
-![Values: 0231 0363 0231](./samples/spiro-0231-0363-0231.svg)
-
-Values: Values: 0231 0363 0495
-
-![Values: 0231 0363 0495](./samples/spiro-0231-0363-0495.svg)
-
-Values: Values: 0231 0495 0231
-
-![Values: 0231 0495 0231](./samples/spiro-0231-0495-0231.svg)
-
-Values: Values: 0231 0528 0231
-
-![Values: 0231 0528 0231](./samples/spiro-0231-0528-0231.svg)
-
-Values: Values: 0231 0528 0528
-
-![Values: 0231 0528 0528](./samples/spiro-0231-0528-0528.svg)
-
-Values: Values: 0231 0561 0561
-
-![Values: 0231 0561 0561](./samples/spiro-0231-0561-0561.svg)
-
-Values: Values: 0231 0627 0231
-
-![Values: 0231 0627 0231](./samples/spiro-0231-0627-0231.svg)
-
-Values: Values: 0231 0726 0231
-
-![Values: 0231 0726 0231](./samples/spiro-0231-0726-0231.svg)
-
-Values: Values: 0231 0759 0495
-
-![Values: 0231 0759 0495](./samples/spiro-0231-0759-0495.svg)
-
-Values: Values: 0231 0759 0759
-
-![Values: 0231 0759 0759](./samples/spiro-0231-0759-0759.svg)
-
-Values: Values: 0231 0825 0033
-
-![Values: 0231 0825 0033](./samples/spiro-0231-0825-0033.svg)
-
-Values: Values: 0231 0825 0528
-
-![Values: 0231 0825 0528](./samples/spiro-0231-0825-0528.svg)
-
-Values: Values: 0231 0825 0627
-
-![Values: 0231 0825 0627](./samples/spiro-0231-0825-0627.svg)
-
-Values: Values: 0231 0858 0198
-
-![Values: 0231 0858 0198](./samples/spiro-0231-0858-0198.svg)
-
-Values: Values: 0231 0858 1056
-
-![Values: 0231 0858 1056](./samples/spiro-0231-0858-1056.svg)
-
-Values: Values: 0231 1023 0363
-
-![Values: 0231 1023 0363](./samples/spiro-0231-1023-0363.svg)
-
-Values: Values: 0231 1023 0429
-
-![Values: 0231 1023 0429](./samples/spiro-0231-1023-0429.svg)
-
-Values: Values: 0231 1023 0495
-
-![Values: 0231 1023 0495](./samples/spiro-0231-1023-0495.svg)
-
-Values: Values: 0231 1056 0099
-
-![Values: 0231 1056 0099](./samples/spiro-0231-1056-0099.svg)
-
-Values: Values: 0231 1056 0264
-
-![Values: 0231 1056 0264](./samples/spiro-0231-1056-0264.svg)
-
-Values: Values: 0231 1056 0792
-
-![Values: 0231 1056 0792](./samples/spiro-0231-1056-0792.svg)
-
-Values: Values: 0231 1056 0924
-
-![Values: 0231 1056 0924](./samples/spiro-0231-1056-0924.svg)
-
-Values: Values: 0240 0840 0816
-
-![Values: 0240 0840 0816](./samples/spiro-0240-0840-0816.svg)
-
-Values: Values: 0240 0864 0240
-
-![Values: 0240 0864 0240](./samples/spiro-0240-0864-0240.svg)
-
-Values: Values: 0240 0864 0552
-
-![Values: 0240 0864 0552](./samples/spiro-0240-0864-0552.svg)
-
-Values: Values: 0240 0888 0240
-
-![Values: 0240 0888 0240](./samples/spiro-0240-0888-0240.svg)
-
-Values: Values: 0240 0888 0888
-
-![Values: 0240 0888 0888](./samples/spiro-0240-0888-0888.svg)
-
-Values: Values: 0240 1008 0600
-
-![Values: 0240 1008 0600](./samples/spiro-0240-1008-0600.svg)
-
-Values: Values: 0240 1008 0624
-
-![Values: 0240 1008 0624](./samples/spiro-0240-1008-0624.svg)
-
-Values: Values: 0264 0024 0024
-
-![Values: 0264 0024 0024](./samples/spiro-0264-0024-0024.svg)
-
-Values: Values: 0264 0072 0072
-
-![Values: 0264 0072 0072](./samples/spiro-0264-0072-0072.svg)
-
-Values: Values: 0264 0096 0096
-
-![Values: 0264 0096 0096](./samples/spiro-0264-0096-0096.svg)
-
-Values: Values: 0264 0099 0759
-
-![Values: 0264 0099 0759](./samples/spiro-0264-0099-0759.svg)
-
-Values: Values: 0264 0099 0924
-
-![Values: 0264 0099 0924](./samples/spiro-0264-0099-0924.svg)
-
-Values: Values: 0264 0165 1056
-
-![Values: 0264 0165 1056](./samples/spiro-0264-0165-1056.svg)
-
-Values: Values: 0264 0264 0363
-
-![Values: 0264 0264 0363](./samples/spiro-0264-0264-0363.svg)
-
-Values: Values: 0264 0264 0561
-
-![Values: 0264 0264 0561](./samples/spiro-0264-0264-0561.svg)
-
-Values: Values: 0264 0264 0594
-
-![Values: 0264 0264 0594](./samples/spiro-0264-0264-0594.svg)
-
-Values: Values: 0264 0264 0627
-
-![Values: 0264 0264 0627](./samples/spiro-0264-0264-0627.svg)
-
-Values: Values: 0264 0264 0693
-
-![Values: 0264 0264 0693](./samples/spiro-0264-0264-0693.svg)
-
-Values: Values: 0264 0264 0726
-
-![Values: 0264 0264 0726](./samples/spiro-0264-0264-0726.svg)
-
-Values: Values: 0264 0336 0192
-
-![Values: 0264 0336 0192](./samples/spiro-0264-0336-0192.svg)
-
-Values: Values: 0480 0648 0816
-
-![Values: 0480 0648 0816](./samples/spiro-0480-0648-0816.svg)
+![Values: 0001 0001 0999](./samples/spiro-0001-0001-0999-2001.svg)
 
