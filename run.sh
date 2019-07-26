@@ -2,7 +2,7 @@
 
 printf "%s\n" "Cleaning..."
 
-time rm -fr out; 
+time rm -fr out/commands; 
 
 printf "%s\n" "Cleaned!"
 
