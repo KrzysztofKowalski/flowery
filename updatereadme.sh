@@ -1,18 +1,9 @@
-#!/usr/bin/env bash
-
+#!/usr/bin/env dash
 cp base.md README.md
-
-for a in `ls -1 samples `; 
-do 
-s=`echo $a|cut -d'-' -f2-4|cut -d'.' -f1|tr '-' ' '|xargs echo Values: `; 
-
-echo Values: $s >> README.md; 
-
-echo >>README.md ; S='!'; 
-
-echo "$S[$s](./samples/$a)" >> README.md; 
-
-echo >> README.md ; 
-
-done;
-
+S='!'
+for a in $(ls -1 samples );
+do
+  [[ -a "$f" ]] || break
+  s=`printf "%s\n" $a | cut -d'-' -f2-4 | cut -d'.' -f1 | tr '-' ' '`
+  printf "Values %s\n%s[%s](./samples/%s)\n" $s $S $s $a >> README.md
+done

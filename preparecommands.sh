@@ -1,24 +1,13 @@
 #!/usr/bin/env dash
-
-basedir=$1
-imgdir=$2
-plotsize=$3
-firstloopstart=1
-secondloopstart=1
-firstend=1
-secondend=1
-mkdir -p $basedir 
-mkdir -p $imgdir
-howmanyiterationsofthirdloopyouneed = 3333
-cmf="parallelcommands.sh"
-cat /dev/null > $cmf
-increment=1
-
-for a in `seq $firstloopstart $firstend`
+baseDirectory=$1; imageDirectory=$2; plotSize=$3; aStart=1; bStart=1; aEnd=1; bEnd=1; cStart=1; cEnd=3333
+mkdir -p $baseDirectory
+mkdir -p $imageDirectory
+parallelCommandsFile="parallelcommands.sh"
+cat /dev/null > $parallelCommandsFile
+loopMultiplier=1
+for a in `seq $aStart $aEnd`
 do
-	printf "%s %s %s %s %s %s %s %s %s %s %s\n" "./subprepare.sh" "$a" "$plotsize" "$secondloopstart" "$secondend" "$basedir" "$imgdir" "${howmanyiterationsofthirdloopyouneed}" >> $cmf
+	printf "%s %s %s %s %s %s %s %s %s %s\n" "./subprepare.sh" "$a" "$plotSize" "$bStart" "$bEnd" "$baseDirectory" "$imageDirectory" "${loopMultiplier}" "$cStart" "$cEnd" >> $parallelCommandsFile
 done
-
-cat $cmf
-
-parallel -j 36 --bar --progress --eta < $cmf
+cat $parallelCommandsFile
+parallel -j 36 --bar --progress --eta < $parallelCommandsFile

@@ -7,3 +7,4 @@ tmp
 parallelcommands.sh
 .idea
 *.iml
+makedirectories.sh

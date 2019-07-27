@@ -1,32 +1,25 @@
 #!/usr/bin/env dash
-
-basedir=$1
-sa=$2
-sb=$3
-sc=$4
-ea=$5
-eb=$6
-ec=$7
-m=$8
-cxdir=$9
-plotsize=${10}
-
-for a in `seq $sa $ea`
+baseDirectory=${1}; Start=${2}; bStart=${3}; cStart=${4}; aEnd=${5}; bEnd=${6}; cEnd=${7};
+multiplier=${8}; computeExecutionDir=${9}; plotSize=${10}; makeCommand=${11}
+makeDirectoryFile=`printf "%s.mkdir" $makeCommand`
+touch $makeDirectoryFile
+printf "%s%s/usr/bin/env dash\n" '#' '!' > $makeDirectoryFile
+chmod +x $makeDirectoryFile
+for a in `seq $Start $aEnd`
 do
-	
-	printf "%04d" $a -- "aformat"
-	printf "%s\n" "mkdir -p ${basedir}/image_${aformat}"
-	for b in `seq $sb $eb`
+	aformat=`printf "%04d" $a`
+	printf "%s\n" "mkdir -p ${baseDirectory}/image_${aformat}" >> $makeDirectoryFile
+	for b in `seq $bStart $bEnd`
 	do
-		printf "%04d" $b -- "$bformat"
-		printf "%s\n" "mkdir -p ${basedir}/image_${aformat}/${bformat}"
-		for c in `seq $sc $ec`
+		bformat=`"%04d" $b`
+		printf "%s %s %s $s/image_%s/%b\n" "mkdir" "-p"" "${baseDirectory}" "${aformat}" "${bformat}"" >> $makeDirectoryFile
+		for c in `seq $cStart $cEnd`
 		do
-			x=$(( $a * $m ))
-			y=$(( $b * $m ))
-			z=$(( $c * $m ))
-			printf "%s %s %s %s %s %s\n" "${cxdir}/cx.sh" $x $y $z \
-				"${basedir}/image_${aformat}/${bformat}" $plotsize
+			x=$(( $a * $multiplier ))
+			y=$(( $b * $multiplier ))
+			z=$(( $c * $multiplier ))
+			printf "%s %s %s %s %s %s\n" "${computeExecutionDir}/cx.sh" $x $y $z \
+				"${baseDirectory}/image_${aformat}/${bformat}" $plotSize
 		done
 	done
 done
