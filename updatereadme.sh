@@ -1,4 +1,4 @@
-#!/usr/bin/env dash
+#!/usr/bin/env sh
 cp base.md README.md
 S='!'
 for a in $(ls -1 samples );

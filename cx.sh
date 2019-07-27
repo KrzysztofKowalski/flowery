@@ -32,7 +32,6 @@ cat <<EOF | gnuplot
  set samples ${samples}
  plot [t=0:1] real(z(t)),imag(z(t))
 EOF
-#printf "%s saved!\n" $fname
 exit
 help:
 cat << EOF
