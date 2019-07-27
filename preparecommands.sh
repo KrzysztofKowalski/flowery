@@ -1,5 +1,5 @@
 #!/usr/bin/env dash
-baseDirectory=$1; imageDirectory=$2; plotSize=$3; aStart=1; bStart=1; aEnd=1; bEnd=1; cStart=1; cEnd=9999
+baseDirectory=$1; imageDirectory=$2; plotSize=$3; aStart=1; bStart=1; aEnd=1; bEnd=1; cStart=1; cEnd=99999
 mkdir -p $baseDirectory
 mkdir -p $imageDirectory
 parallelCommandsFile="parallelcommands.sh"
