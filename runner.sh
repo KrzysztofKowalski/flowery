@@ -7,19 +7,16 @@ printf "%s%s/usr/bin/env dash\n" '#' '!' > $makeDirectoryFile
 chmod +x $makeDirectoryFile
 for a in `seq $Start $aEnd`
 do
-	aformat=`printf "%04d" $a`
-	printf "%s\n" "mkdir -p ${baseDirectory}/image_${aformat}" >> $makeDirectoryFile
+	printf "%s %s %s/images/%04d/%04d\n" "mkdir" "-p" "${baseDirectory}" $plotSize $a >> $makeDirectoryFile
 	for b in `seq $bStart $bEnd`
 	do
-		bformat=`"%04d" $b`
-		printf "%s %s %s $s/image_%s/%b\n" "mkdir" "-p"" "${baseDirectory}" "${aformat}" "${bformat}"" >> $makeDirectoryFile
+		printf "%s %s %s/%s/%04d/%04d/%04d\n" "mkdir" "-p" "${baseDirectory}" "images" ${plotSize} ${a} ${b} >> $makeDirectoryFile
 		for c in `seq $cStart $cEnd`
 		do
 			x=$(( $a * $multiplier ))
 			y=$(( $b * $multiplier ))
 			z=$(( $c * $multiplier ))
-			printf "%s %s %s %s %s %s\n" "${computeExecutionDir}/cx.sh" $x $y $z \
-				"${baseDirectory}/image_${aformat}/${bformat}" $plotSize
+			printf "%s/%s %d %d %d %s/%s/%04d/%04d/%04d %d\n" "${computeExecutionDir}" "cx.sh" "${x}" "${y}" "${z}" "${baseDirectory}" "images"  "${plotSize}" "${a}" "${b}" "${plotSize}"
 		done
 	done
 done
