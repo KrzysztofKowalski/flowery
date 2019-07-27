@@ -2,7 +2,7 @@
 printf "Generating directories\n"
 find out -type f -iname '*.sh.mkdir' | sort -n > makedirectories.sh
 parallel --progress --bar -eta -j 24 < makedirectories.sh
-printfs "Going with execution...\n"
+printf "Going with execution...\n"
 find out -type f -iname '*.sh' | sort -n > commands.sh
 for a in `cat commands.sh`
 do

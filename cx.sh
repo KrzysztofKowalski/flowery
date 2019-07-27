@@ -12,7 +12,7 @@ aformat=`printf "%04d" $n1`; bformat=`printf "%04d" $n2`; cformat=`printf "%04d"
 fname="${output}/spiro-${aformat}-${bformat}-${cformat}-${samples}.svg"
 if [ -f $fname ]
 then
-  printf "%s generated already!\n" $fname
+  # printf "%s generated already!\n" $fname
   exit
 fi
 cat <<EOF | gnuplot
@@ -36,7 +36,7 @@ cat <<EOF | gnuplot
  set samples ${samples}
  plot [t=0:1] real(z(t)),imag(z(t))
 EOF
-printf "%s saved!\n" $fname
+#printf "%s saved!\n" $fname
 exit
 help:
 cat << EOF
