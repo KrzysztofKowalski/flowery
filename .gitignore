@@ -5,3 +5,5 @@ process3.sh
 out
 tmp
 parallelcommands.sh
+.idea
+*.iml
