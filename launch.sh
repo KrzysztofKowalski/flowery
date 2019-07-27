@@ -7,5 +7,5 @@ find out -type f -iname '*.sh' | sort -n > commands.sh
 for a in `cat commands.sh`
 do
   printf "Executing %s\b" %a
-  parallel --progress --bar -eta -j 64 < $a
+  parallel --progress --bar -eta -j 512 < $a
 done
