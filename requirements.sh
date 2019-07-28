@@ -14,14 +14,15 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 apt=`command -v apt-get | wc -l`; brew=`command -v brew|wc -l`
+what="parallel gnuplot dash"
 if [ $apt -gt 0 ]
 then
   printf "Linux, great\n"
   sudo apt-get update
-  sudo apt-get install parallel gnuplot
+  sudo apt-get install $what
 fi
 if [ $brew -gt 0 ]
 then
   printf "Mac, even better\n"
-  brew install gnuplot parallel
+  brew install $what
 fi
