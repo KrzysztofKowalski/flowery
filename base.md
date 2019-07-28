@@ -46,6 +46,3 @@ open tmp
 ### Links
 
 https://linuxgazette.net/133/luana.html
-
-## Samples
-
