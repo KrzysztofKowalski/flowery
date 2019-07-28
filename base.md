@@ -20,6 +20,12 @@ sh ./requirements.sh
 ./run.sh
 ```
 
+or 
+
+```
+run.sh NUMBERYOUWANT
+```
+
 ## For some nice samples press:
 
 ```
