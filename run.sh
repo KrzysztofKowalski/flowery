@@ -20,7 +20,7 @@ printf "%s\n" "Generation"
 cSize=360
 if [ -n "${1}" ]; then cSize=$1; fi
 plotSize=$cSize
-aSize=$cSize
+aSize=1
 bSize=$cSize
 ./preparecommands.sh "$(pwd)" "out/images" "${plotSize}" "1" "1" "${aSize}" "${bSize}" "1" "${cSize}"
 printf "%s\n" "Commands ready"
