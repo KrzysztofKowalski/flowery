@@ -23,5 +23,4 @@ for a in `seq $aStart $aEnd`
 do
 	printf "%s %s %s %s %s %s %s %s %s %s\n" "./subprepare.sh" "${a}" "${plotSize}" "${bStart}" "${bEnd}" "${baseDirectory}" "${imageDirectory}" "${loopMultiplier}" "${cStart}" "${cEnd}" >> "${parallelCommandsFile}"
 done
-cat $parallelCommandsFile
 parallel -j 36 --bar --progress --eta < $parallelCommandsFile

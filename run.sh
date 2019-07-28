@@ -17,10 +17,12 @@ printf "%s\n" "Cleaning..."
 rm -fr out/commands
 printf "%s\n" "Cleaned!"
 printf "%s\n" "Generation"
-zSize=3601
-if [ -n "${1}" ]; then zSize=$1; fi
-plotSize=$zSize
-./preparecommands.sh "$(pwd)" "out/images" "${plotSize}" "1" "1" "1" "1" "1" "${zSize}"
+cSize=360
+if [ -n "${1}" ]; then cSize=$1; fi
+plotSize=$cSize
+aSize=$cSize
+bSize=$cSize
+./preparecommands.sh "$(pwd)" "out/images" "${plotSize}" "1" "1" "${aSize}" "${bSize}" "1" "${cSize}"
 printf "%s\n" "Commands ready"
 printf "%s\n" "Launching"
 ./launch.sh
