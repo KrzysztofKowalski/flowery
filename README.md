@@ -1933,677 +1933,338 @@ Values X: 0001 Y: 0001 Z: 99999, P: 99999
 Values X: 0001 Y: 0121 Z: 0011, P: 2001 
 ![0001 Y: 0121 Z: 0011, P: 2001](./samples/spiro-0001-0121-0011-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0011, P: ! 
-0001[0121 Y: 0011 Z: spiro-0001-0121-0011.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0016, P: 2001 
 ![0001 Y: 0121 Z: 0016, P: 2001](./samples/spiro-0001-0121-0016-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0016, P: ! 
-0001[0121 Y: 0016 Z: spiro-0001-0121-0016.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0039, P: 2001 
 ![0001 Y: 0121 Z: 0039, P: 2001](./samples/spiro-0001-0121-0039-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0039, P: ! 
-0001[0121 Y: 0039 Z: spiro-0001-0121-0039.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0040, P: 2001 
 ![0001 Y: 0121 Z: 0040, P: 2001](./samples/spiro-0001-0121-0040-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0040, P: ! 
-0001[0121 Y: 0040 Z: spiro-0001-0121-0040.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0059, P: 2001 
 ![0001 Y: 0121 Z: 0059, P: 2001](./samples/spiro-0001-0121-0059-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0059, P: ! 
-0001[0121 Y: 0059 Z: spiro-0001-0121-0059.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0060, P: 2001 
 ![0001 Y: 0121 Z: 0060, P: 2001](./samples/spiro-0001-0121-0060-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0060, P: ! 
-0001[0121 Y: 0060 Z: spiro-0001-0121-0060.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0074, P: 2001 
 ![0001 Y: 0121 Z: 0074, P: 2001](./samples/spiro-0001-0121-0074-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0074, P: ! 
-0001[0121 Y: 0074 Z: spiro-0001-0121-0074.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0082, P: 2001 
 ![0001 Y: 0121 Z: 0082, P: 2001](./samples/spiro-0001-0121-0082-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0082, P: ! 
-0001[0121 Y: 0082 Z: spiro-0001-0121-0082.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0084, P: 2001 
 ![0001 Y: 0121 Z: 0084, P: 2001](./samples/spiro-0001-0121-0084-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0084, P: ! 
-0001[0121 Y: 0084 Z: spiro-0001-0121-0084.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0092, P: 2001 
 ![0001 Y: 0121 Z: 0092, P: 2001](./samples/spiro-0001-0121-0092-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0092, P: ! 
-0001[0121 Y: 0092 Z: spiro-0001-0121-0092.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0093, P: 2001 
 ![0001 Y: 0121 Z: 0093, P: 2001](./samples/spiro-0001-0121-0093-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0093, P: ! 
-0001[0121 Y: 0093 Z: spiro-0001-0121-0093.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0094, P: 2001 
 ![0001 Y: 0121 Z: 0094, P: 2001](./samples/spiro-0001-0121-0094-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0094, P: ! 
-0001[0121 Y: 0094 Z: spiro-0001-0121-0094.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0098, P: 2001 
 ![0001 Y: 0121 Z: 0098, P: 2001](./samples/spiro-0001-0121-0098-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0098, P: ! 
-0001[0121 Y: 0098 Z: spiro-0001-0121-0098.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0109, P: 2001 
 ![0001 Y: 0121 Z: 0109, P: 2001](./samples/spiro-0001-0121-0109-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0109, P: ! 
-0001[0121 Y: 0109 Z: spiro-0001-0121-0109.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0115, P: 2001 
 ![0001 Y: 0121 Z: 0115, P: 2001](./samples/spiro-0001-0121-0115-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0115, P: ! 
-0001[0121 Y: 0115 Z: spiro-0001-0121-0115.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0116, P: 2001 
 ![0001 Y: 0121 Z: 0116, P: 2001](./samples/spiro-0001-0121-0116-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0116, P: ! 
-0001[0121 Y: 0116 Z: spiro-0001-0121-0116.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0118, P: 2001 
 ![0001 Y: 0121 Z: 0118, P: 2001](./samples/spiro-0001-0121-0118-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0118, P: ! 
-0001[0121 Y: 0118 Z: spiro-0001-0121-0118.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0125, P: 2001 
 ![0001 Y: 0121 Z: 0125, P: 2001](./samples/spiro-0001-0121-0125-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0125, P: ! 
-0001[0121 Y: 0125 Z: spiro-0001-0121-0125.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0129, P: 2001 
 ![0001 Y: 0121 Z: 0129, P: 2001](./samples/spiro-0001-0121-0129-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0129, P: ! 
-0001[0121 Y: 0129 Z: spiro-0001-0121-0129.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0130, P: 2001 
 ![0001 Y: 0121 Z: 0130, P: 2001](./samples/spiro-0001-0121-0130-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0130, P: ! 
-0001[0121 Y: 0130 Z: spiro-0001-0121-0130.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0131, P: 2001 
 ![0001 Y: 0121 Z: 0131, P: 2001](./samples/spiro-0001-0121-0131-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0131, P: ! 
-0001[0121 Y: 0131 Z: spiro-0001-0121-0131.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0136, P: 2001 
 ![0001 Y: 0121 Z: 0136, P: 2001](./samples/spiro-0001-0121-0136-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0136, P: ! 
-0001[0121 Y: 0136 Z: spiro-0001-0121-0136.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0140, P: 2001 
 ![0001 Y: 0121 Z: 0140, P: 2001](./samples/spiro-0001-0121-0140-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0140, P: ! 
-0001[0121 Y: 0140 Z: spiro-0001-0121-0140.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0144, P: 2001 
 ![0001 Y: 0121 Z: 0144, P: 2001](./samples/spiro-0001-0121-0144-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0144, P: ! 
-0001[0121 Y: 0144 Z: spiro-0001-0121-0144.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0160, P: 2001 
 ![0001 Y: 0121 Z: 0160, P: 2001](./samples/spiro-0001-0121-0160-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0160, P: ! 
-0001[0121 Y: 0160 Z: spiro-0001-0121-0160.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0163, P: 2001 
 ![0001 Y: 0121 Z: 0163, P: 2001](./samples/spiro-0001-0121-0163-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0163, P: ! 
-0001[0121 Y: 0163 Z: spiro-0001-0121-0163.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0171, P: 2001 
 ![0001 Y: 0121 Z: 0171, P: 2001](./samples/spiro-0001-0121-0171-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0171, P: ! 
-0001[0121 Y: 0171 Z: spiro-0001-0121-0171.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0183, P: 2001 
 ![0001 Y: 0121 Z: 0183, P: 2001](./samples/spiro-0001-0121-0183-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0183, P: ! 
-0001[0121 Y: 0183 Z: spiro-0001-0121-0183.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0203, P: 2001 
 ![0001 Y: 0121 Z: 0203, P: 2001](./samples/spiro-0001-0121-0203-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0203, P: ! 
-0001[0121 Y: 0203 Z: spiro-0001-0121-0203.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0216, P: 2001 
 ![0001 Y: 0121 Z: 0216, P: 2001](./samples/spiro-0001-0121-0216-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0216, P: ! 
-0001[0121 Y: 0216 Z: spiro-0001-0121-0216.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0220, P: 2001 
 ![0001 Y: 0121 Z: 0220, P: 2001](./samples/spiro-0001-0121-0220-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0220, P: ! 
-0001[0121 Y: 0220 Z: spiro-0001-0121-0220.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0235, P: 2001 
 ![0001 Y: 0121 Z: 0235, P: 2001](./samples/spiro-0001-0121-0235-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0235, P: ! 
-0001[0121 Y: 0235 Z: spiro-0001-0121-0235.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0236, P: 2001 
 ![0001 Y: 0121 Z: 0236, P: 2001](./samples/spiro-0001-0121-0236-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0236, P: ! 
-0001[0121 Y: 0236 Z: spiro-0001-0121-0236.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0237, P: 2001 
 ![0001 Y: 0121 Z: 0237, P: 2001](./samples/spiro-0001-0121-0237-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0237, P: ! 
-0001[0121 Y: 0237 Z: spiro-0001-0121-0237.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0238, P: 2001 
 ![0001 Y: 0121 Z: 0238, P: 2001](./samples/spiro-0001-0121-0238-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0238, P: ! 
-0001[0121 Y: 0238 Z: spiro-0001-0121-0238.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0239, P: 2001 
 ![0001 Y: 0121 Z: 0239, P: 2001](./samples/spiro-0001-0121-0239-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0239, P: ! 
-0001[0121 Y: 0239 Z: spiro-0001-0121-0239.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0244, P: 2001 
 ![0001 Y: 0121 Z: 0244, P: 2001](./samples/spiro-0001-0121-0244-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0244, P: ! 
-0001[0121 Y: 0244 Z: spiro-0001-0121-0244.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0245, P: 2001 
 ![0001 Y: 0121 Z: 0245, P: 2001](./samples/spiro-0001-0121-0245-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0245, P: ! 
-0001[0121 Y: 0245 Z: spiro-0001-0121-0245.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0246, P: 2001 
 ![0001 Y: 0121 Z: 0246, P: 2001](./samples/spiro-0001-0121-0246-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0246, P: ! 
-0001[0121 Y: 0246 Z: spiro-0001-0121-0246.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0247, P: 2001 
 ![0001 Y: 0121 Z: 0247, P: 2001](./samples/spiro-0001-0121-0247-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0247, P: ! 
-0001[0121 Y: 0247 Z: spiro-0001-0121-0247.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0280, P: 2001 
 ![0001 Y: 0121 Z: 0280, P: 2001](./samples/spiro-0001-0121-0280-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0280, P: ! 
-0001[0121 Y: 0280 Z: spiro-0001-0121-0280.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0304, P: 2001 
 ![0001 Y: 0121 Z: 0304, P: 2001](./samples/spiro-0001-0121-0304-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0304, P: ! 
-0001[0121 Y: 0304 Z: spiro-0001-0121-0304.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0305, P: 2001 
 ![0001 Y: 0121 Z: 0305, P: 2001](./samples/spiro-0001-0121-0305-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0305, P: ! 
-0001[0121 Y: 0305 Z: spiro-0001-0121-0305.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0321, P: 2001 
 ![0001 Y: 0121 Z: 0321, P: 2001](./samples/spiro-0001-0121-0321-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0321, P: ! 
-0001[0121 Y: 0321 Z: spiro-0001-0121-0321.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0336, P: 2001 
 ![0001 Y: 0121 Z: 0336, P: 2001](./samples/spiro-0001-0121-0336-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0336, P: ! 
-0001[0121 Y: 0336 Z: spiro-0001-0121-0336.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0359, P: 2001 
 ![0001 Y: 0121 Z: 0359, P: 2001](./samples/spiro-0001-0121-0359-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0359, P: ! 
-0001[0121 Y: 0359 Z: spiro-0001-0121-0359.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0363, P: 2001 
 ![0001 Y: 0121 Z: 0363, P: 2001](./samples/spiro-0001-0121-0363-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0363, P: ! 
-0001[0121 Y: 0363 Z: spiro-0001-0121-0363.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0365, P: 2001 
 ![0001 Y: 0121 Z: 0365, P: 2001](./samples/spiro-0001-0121-0365-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0365, P: ! 
-0001[0121 Y: 0365 Z: spiro-0001-0121-0365.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0366, P: 2001 
 ![0001 Y: 0121 Z: 0366, P: 2001](./samples/spiro-0001-0121-0366-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0366, P: ! 
-0001[0121 Y: 0366 Z: spiro-0001-0121-0366.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0367, P: 2001 
 ![0001 Y: 0121 Z: 0367, P: 2001](./samples/spiro-0001-0121-0367-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0367, P: ! 
-0001[0121 Y: 0367 Z: spiro-0001-0121-0367.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0368, P: 2001 
 ![0001 Y: 0121 Z: 0368, P: 2001](./samples/spiro-0001-0121-0368-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0368, P: ! 
-0001[0121 Y: 0368 Z: spiro-0001-0121-0368.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0441, P: 2001 
 ![0001 Y: 0121 Z: 0441, P: 2001](./samples/spiro-0001-0121-0441-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0441, P: ! 
-0001[0121 Y: 0441 Z: spiro-0001-0121-0441.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0478, P: 2001 
 ![0001 Y: 0121 Z: 0478, P: 2001](./samples/spiro-0001-0121-0478-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0478, P: ! 
-0001[0121 Y: 0478 Z: spiro-0001-0121-0478.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0481, P: 2001 
 ![0001 Y: 0121 Z: 0481, P: 2001](./samples/spiro-0001-0121-0481-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0481, P: ! 
-0001[0121 Y: 0481 Z: spiro-0001-0121-0481.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0485, P: 2001 
 ![0001 Y: 0121 Z: 0485, P: 2001](./samples/spiro-0001-0121-0485-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0485, P: ! 
-0001[0121 Y: 0485 Z: spiro-0001-0121-0485.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0486, P: 2001 
 ![0001 Y: 0121 Z: 0486, P: 2001](./samples/spiro-0001-0121-0486-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0486, P: ! 
-0001[0121 Y: 0486 Z: spiro-0001-0121-0486.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0487, P: 2001 
 ![0001 Y: 0121 Z: 0487, P: 2001](./samples/spiro-0001-0121-0487-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0487, P: ! 
-0001[0121 Y: 0487 Z: spiro-0001-0121-0487.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0488, P: 2001 
 ![0001 Y: 0121 Z: 0488, P: 2001](./samples/spiro-0001-0121-0488-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0488, P: ! 
-0001[0121 Y: 0488 Z: spiro-0001-0121-0488.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0489, P: 2001 
 ![0001 Y: 0121 Z: 0489, P: 2001](./samples/spiro-0001-0121-0489-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0489, P: ! 
-0001[0121 Y: 0489 Z: spiro-0001-0121-0489.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0499, P: 2001 
 ![0001 Y: 0121 Z: 0499, P: 2001](./samples/spiro-0001-0121-0499-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0499, P: ! 
-0001[0121 Y: 0499 Z: spiro-0001-0121-0499.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0505, P: 2001 
 ![0001 Y: 0121 Z: 0505, P: 2001](./samples/spiro-0001-0121-0505-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0505, P: ! 
-0001[0121 Y: 0505 Z: spiro-0001-0121-0505.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0521, P: 2001 
 ![0001 Y: 0121 Z: 0521, P: 2001](./samples/spiro-0001-0121-0521-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0521, P: ! 
-0001[0121 Y: 0521 Z: spiro-0001-0121-0521.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0545, P: 2001 
 ![0001 Y: 0121 Z: 0545, P: 2001](./samples/spiro-0001-0121-0545-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0545, P: ! 
-0001[0121 Y: 0545 Z: spiro-0001-0121-0545.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0585, P: 2001 
 ![0001 Y: 0121 Z: 0585, P: 2001](./samples/spiro-0001-0121-0585-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0585, P: ! 
-0001[0121 Y: 0585 Z: spiro-0001-0121-0585.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0586, P: 2001 
 ![0001 Y: 0121 Z: 0586, P: 2001](./samples/spiro-0001-0121-0586-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0586, P: ! 
-0001[0121 Y: 0586 Z: spiro-0001-0121-0586.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0605, P: 2001 
 ![0001 Y: 0121 Z: 0605, P: 2001](./samples/spiro-0001-0121-0605-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0605, P: ! 
-0001[0121 Y: 0605 Z: spiro-0001-0121-0605.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0606, P: 2001 
 ![0001 Y: 0121 Z: 0606, P: 2001](./samples/spiro-0001-0121-0606-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0606, P: ! 
-0001[0121 Y: 0606 Z: spiro-0001-0121-0606.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0607, P: 2001 
 ![0001 Y: 0121 Z: 0607, P: 2001](./samples/spiro-0001-0121-0607-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0607, P: ! 
-0001[0121 Y: 0607 Z: spiro-0001-0121-0607.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0626, P: 2001 
 ![0001 Y: 0121 Z: 0626, P: 2001](./samples/spiro-0001-0121-0626-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0626, P: ! 
-0001[0121 Y: 0626 Z: spiro-0001-0121-0626.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0654, P: 2001 
 ![0001 Y: 0121 Z: 0654, P: 2001](./samples/spiro-0001-0121-0654-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0654, P: ! 
-0001[0121 Y: 0654 Z: spiro-0001-0121-0654.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0666, P: 2001 
 ![0001 Y: 0121 Z: 0666, P: 2001](./samples/spiro-0001-0121-0666-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0666, P: ! 
-0001[0121 Y: 0666 Z: spiro-0001-0121-0666.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0667, P: 2001 
 ![0001 Y: 0121 Z: 0667, P: 2001](./samples/spiro-0001-0121-0667-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0667, P: ! 
-0001[0121 Y: 0667 Z: spiro-0001-0121-0667.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0680, P: 2001 
 ![0001 Y: 0121 Z: 0680, P: 2001](./samples/spiro-0001-0121-0680-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0680, P: ! 
-0001[0121 Y: 0680 Z: spiro-0001-0121-0680.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0683, P: 2001 
 ![0001 Y: 0121 Z: 0683, P: 2001](./samples/spiro-0001-0121-0683-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0683, P: ! 
-0001[0121 Y: 0683 Z: spiro-0001-0121-0683.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0695, P: 2001 
 ![0001 Y: 0121 Z: 0695, P: 2001](./samples/spiro-0001-0121-0695-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0695, P: ! 
-0001[0121 Y: 0695 Z: spiro-0001-0121-0695.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0698, P: 2001 
 ![0001 Y: 0121 Z: 0698, P: 2001](./samples/spiro-0001-0121-0698-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0698, P: ! 
-0001[0121 Y: 0698 Z: spiro-0001-0121-0698.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0701, P: 2001 
 ![0001 Y: 0121 Z: 0701, P: 2001](./samples/spiro-0001-0121-0701-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0701, P: ! 
-0001[0121 Y: 0701 Z: spiro-0001-0121-0701.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0706, P: 2001 
 ![0001 Y: 0121 Z: 0706, P: 2001](./samples/spiro-0001-0121-0706-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0706, P: ! 
-0001[0121 Y: 0706 Z: spiro-0001-0121-0706.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0727, P: 2001 
 ![0001 Y: 0121 Z: 0727, P: 2001](./samples/spiro-0001-0121-0727-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0727, P: ! 
-0001[0121 Y: 0727 Z: spiro-0001-0121-0727.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0746, P: 2001 
 ![0001 Y: 0121 Z: 0746, P: 2001](./samples/spiro-0001-0121-0746-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0746, P: ! 
-0001[0121 Y: 0746 Z: spiro-0001-0121-0746.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0751, P: 2001 
 ![0001 Y: 0121 Z: 0751, P: 2001](./samples/spiro-0001-0121-0751-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0751, P: ! 
-0001[0121 Y: 0751 Z: spiro-0001-0121-0751.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0756, P: 2001 
 ![0001 Y: 0121 Z: 0756, P: 2001](./samples/spiro-0001-0121-0756-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0756, P: ! 
-0001[0121 Y: 0756 Z: spiro-0001-0121-0756.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0757, P: 2001 
 ![0001 Y: 0121 Z: 0757, P: 2001](./samples/spiro-0001-0121-0757-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0757, P: ! 
-0001[0121 Y: 0757 Z: spiro-0001-0121-0757.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0761, P: 2001 
 ![0001 Y: 0121 Z: 0761, P: 2001](./samples/spiro-0001-0121-0761-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0761, P: ! 
-0001[0121 Y: 0761 Z: spiro-0001-0121-0761.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0776, P: 2001 
 ![0001 Y: 0121 Z: 0776, P: 2001](./samples/spiro-0001-0121-0776-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0776, P: ! 
-0001[0121 Y: 0776 Z: spiro-0001-0121-0776.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0787, P: 2001 
 ![0001 Y: 0121 Z: 0787, P: 2001](./samples/spiro-0001-0121-0787-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0787, P: ! 
-0001[0121 Y: 0787 Z: spiro-0001-0121-0787.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0788, P: 2001 
 ![0001 Y: 0121 Z: 0788, P: 2001](./samples/spiro-0001-0121-0788-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0788, P: ! 
-0001[0121 Y: 0788 Z: spiro-0001-0121-0788.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0791, P: 2001 
 ![0001 Y: 0121 Z: 0791, P: 2001](./samples/spiro-0001-0121-0791-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0791, P: ! 
-0001[0121 Y: 0791 Z: spiro-0001-0121-0791.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0800, P: 2001 
 ![0001 Y: 0121 Z: 0800, P: 2001](./samples/spiro-0001-0121-0800-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0800, P: ! 
-0001[0121 Y: 0800 Z: spiro-0001-0121-0800.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0816, P: 2001 
 ![0001 Y: 0121 Z: 0816, P: 2001](./samples/spiro-0001-0121-0816-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0816, P: ! 
-0001[0121 Y: 0816 Z: spiro-0001-0121-0816.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0817, P: 2001 
 ![0001 Y: 0121 Z: 0817, P: 2001](./samples/spiro-0001-0121-0817-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0817, P: ! 
-0001[0121 Y: 0817 Z: spiro-0001-0121-0817.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0829, P: 2001 
 ![0001 Y: 0121 Z: 0829, P: 2001](./samples/spiro-0001-0121-0829-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0829, P: ! 
-0001[0121 Y: 0829 Z: spiro-0001-0121-0829.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0848, P: 2001 
 ![0001 Y: 0121 Z: 0848, P: 2001](./samples/spiro-0001-0121-0848-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0848, P: ! 
-0001[0121 Y: 0848 Z: spiro-0001-0121-0848.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0849, P: 2001 
 ![0001 Y: 0121 Z: 0849, P: 2001](./samples/spiro-0001-0121-0849-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0849, P: ! 
-0001[0121 Y: 0849 Z: spiro-0001-0121-0849.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0877, P: 2001 
 ![0001 Y: 0121 Z: 0877, P: 2001](./samples/spiro-0001-0121-0877-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0877, P: ! 
-0001[0121 Y: 0877 Z: spiro-0001-0121-0877.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0878, P: 2001 
 ![0001 Y: 0121 Z: 0878, P: 2001](./samples/spiro-0001-0121-0878-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0878, P: ! 
-0001[0121 Y: 0878 Z: spiro-0001-0121-0878.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0898, P: 2001 
 ![0001 Y: 0121 Z: 0898, P: 2001](./samples/spiro-0001-0121-0898-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0898, P: ! 
-0001[0121 Y: 0898 Z: spiro-0001-0121-0898.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0908, P: 2001 
 ![0001 Y: 0121 Z: 0908, P: 2001](./samples/spiro-0001-0121-0908-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0908, P: ! 
-0001[0121 Y: 0908 Z: spiro-0001-0121-0908.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0909, P: 2001 
 ![0001 Y: 0121 Z: 0909, P: 2001](./samples/spiro-0001-0121-0909-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0909, P: ! 
-0001[0121 Y: 0909 Z: spiro-0001-0121-0909.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0919, P: 2001 
 ![0001 Y: 0121 Z: 0919, P: 2001](./samples/spiro-0001-0121-0919-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0919, P: ! 
-0001[0121 Y: 0919 Z: spiro-0001-0121-0919.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0938, P: 2001 
 ![0001 Y: 0121 Z: 0938, P: 2001](./samples/spiro-0001-0121-0938-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0938, P: ! 
-0001[0121 Y: 0938 Z: spiro-0001-0121-0938.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0939, P: 2001 
 ![0001 Y: 0121 Z: 0939, P: 2001](./samples/spiro-0001-0121-0939-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0939, P: ! 
-0001[0121 Y: 0939 Z: spiro-0001-0121-0939.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0959, P: 2001 
 ![0001 Y: 0121 Z: 0959, P: 2001](./samples/spiro-0001-0121-0959-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0959, P: ! 
-0001[0121 Y: 0959 Z: spiro-0001-0121-0959.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0961, P: 2001 
 ![0001 Y: 0121 Z: 0961, P: 2001](./samples/spiro-0001-0121-0961-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0961, P: ! 
-0001[0121 Y: 0961 Z: spiro-0001-0121-0961.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0968, P: 2001 
 ![0001 Y: 0121 Z: 0968, P: 2001](./samples/spiro-0001-0121-0968-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0968, P: ! 
-0001[0121 Y: 0968 Z: spiro-0001-0121-0968.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0969, P: 2001 
 ![0001 Y: 0121 Z: 0969, P: 2001](./samples/spiro-0001-0121-0969-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0969, P: ! 
-0001[0121 Y: 0969 Z: spiro-0001-0121-0969.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0970, P: 2001 
 ![0001 Y: 0121 Z: 0970, P: 2001](./samples/spiro-0001-0121-0970-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0970, P: ! 
-0001[0121 Y: 0970 Z: spiro-0001-0121-0970.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0979, P: 2001 
 ![0001 Y: 0121 Z: 0979, P: 2001](./samples/spiro-0001-0121-0979-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0979, P: ! 
-0001[0121 Y: 0979 Z: spiro-0001-0121-0979.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0993, P: 2001 
 ![0001 Y: 0121 Z: 0993, P: 2001](./samples/spiro-0001-0121-0993-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0993, P: ! 
-0001[0121 Y: 0993 Z: spiro-0001-0121-0993.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0995, P: 2001 
 ![0001 Y: 0121 Z: 0995, P: 2001](./samples/spiro-0001-0121-0995-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0995, P: ! 
-0001[0121 Y: 0995 Z: spiro-0001-0121-0995.svg, P: ](./samples/)
 
 Values X: 0001 Y: 0121 Z: 0996, P: 2001 
 ![0001 Y: 0121 Z: 0996, P: 2001](./samples/spiro-0001-0121-0996-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0996, P: ! 
-0001[0121 Y: 0996 Z: spiro-0001-0121-0996.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0997, P: 2001 
 ![0001 Y: 0121 Z: 0997, P: 2001](./samples/spiro-0001-0121-0997-2001.svg)
 
-Values X: 0001 Y: 0121 Z: 0997, P: ! 
-0001[0121 Y: 0997 Z: spiro-0001-0121-0997.svg, P: ](./samples/)
-
 Values X: 0001 Y: 0121 Z: 0999, P: 2001 
 ![0001 Y: 0121 Z: 0999, P: 2001](./samples/spiro-0001-0121-0999-2001.svg)
-
-Values X: 0001 Y: 0121 Z: 0999, P: ! 
-0001[0121 Y: 0999 Z: spiro-0001-0121-0999.svg, P: ](./samples/)
