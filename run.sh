@@ -22,7 +22,12 @@ if [ -n "${1}" ]; then cSize=$1; fi
 plotSize=$cSize
 aSize=1
 bSize=$cSize
-./preparecommands.sh "$(pwd)" "out/images" "${plotSize}" "1" "1" "${aSize}" "${bSize}" "1" "${cSize}"
+aStart=1
+bStart=1
+cStart=1
+if [ -n "${2}" ]; then aStart=$2; fi
+if [ -n "${3}" ]; then aSize=$3; fi
+./preparecommands.sh "$(pwd)" "out/images" "${plotSize}" "${aStart}" "${bStart}" "${aSize}" "${bSize}" "${cStart}" "${cSize}"
 printf "%s\n" "Commands ready"
 printf "%s\n" "Launching"
 ./launch.sh
