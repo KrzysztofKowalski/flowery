@@ -17,7 +17,7 @@ printf "%s\n" "Cleaning..."
 rm -fr out/commands
 printf "%s\n" "Cleaned!"
 printf "%s\n" "Generation"
-cSize=360
+cSize=720
 if [ -n "${1}" ]; then cSize=$1; fi
 plotSize=$cSize
 aSize=1
