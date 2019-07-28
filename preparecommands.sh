@@ -13,7 +13,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-baseDirectory=$1; imageDirectory=$2; plotSize=$3; aStart=1; bStart=1; aEnd=1; bEnd=1; cStart=1; cEnd=3601
+baseDirectory=${1}; imageDirectory=${2}; plotSize=${3}; aStart=${4}; bStart=${5}; aEnd=${6}; bEnd=${7}; cStart=${8}; cEnd=${9}
 mkdir -p $baseDirectory
 mkdir -p $imageDirectory
 parallelCommandsFile="parallelcommands.sh"
@@ -21,7 +21,7 @@ cat /dev/null > $parallelCommandsFile
 loopMultiplier=1
 for a in `seq $aStart $aEnd`
 do
-	printf "%s %s %s %s %s %s %s %s %s %s\n" "./subprepare.sh" "$a" "$plotSize" "$bStart" "$bEnd" "$baseDirectory" "$imageDirectory" "${loopMultiplier}" "$cStart" "$cEnd" >> $parallelCommandsFile
+	printf "%s %s %s %s %s %s %s %s %s %s\n" "./subprepare.sh" "${a}" "${plotSize}" "${bStart}" "${bEnd}" "${baseDirectory}" "${imageDirectory}" "${loopMultiplier}" "${cStart}" "${cEnd}" >> "${parallelCommandsFile}"
 done
 cat $parallelCommandsFile
 parallel -j 36 --bar --progress --eta < $parallelCommandsFile

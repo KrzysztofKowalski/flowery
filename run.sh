@@ -14,10 +14,13 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 printf "%s\n" "Cleaning..."
-time rm -fr out/commands
+rm -fr out/commands
 printf "%s\n" "Cleaned!"
 printf "%s\n" "Generation"
-time ./preparecommands.sh $(pwd) out/images 3601
+zSize=3601
+if [ -n "${1}" ]; then zSize=$1; fi
+plotSize=$zSize
+./preparecommands.sh "$(pwd)" "out/images" "${plotSize}" "1" "1" "1" "1" "1" "${zSize}"
 printf "%s\n" "Commands ready"
 printf "%s\n" "Launching"
-time ./launch.sh
+./launch.sh
