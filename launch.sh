@@ -20,6 +20,6 @@ printf "Going with execution...\n"
 find out -type f -iname '*.sh' | sort -n > commands.sh
 for a in `cat commands.sh`
 do
-  printf "Executing %s\b" %a
+  printf "Executing %s\n" %a
   parallel --progress --bar -eta -j 48 < $a
 done
