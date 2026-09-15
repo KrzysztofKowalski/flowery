@@ -1,5 +1,9 @@
 # flowery
 
+
+[FLOWERY](./image.webp)
+
+
 Real-time, interactive spirograph renderer — **SDL3 port** of the classic
 gnuplot "wheels on wheels on wheels" (Farris curve) generator.
 
