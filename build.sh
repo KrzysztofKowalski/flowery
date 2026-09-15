@@ -19,5 +19,5 @@ if ! pkg-config --exists sdl3; then
     exit 1
 fi
 
-printf 'building flowery against SDL3 %s\n' "$(pkg-config --modversion sdl3)"
+printf 'building flowery (C++20) against SDL3 %s\n' "$(pkg-config --modversion sdl3)"
 exec make "$@"

@@ -1,4 +1,4 @@
-/* test_flowery.c — tests for the flowery curve math (src/flowery.c).
+/* test_flowery.cpp — tests for the flowery curve math (src/flowery.cpp).
  *
  *   ./test_flowery                 analytic properties of the curve
  *   ./test_flowery --svg FILE...   compare against gnuplot output
@@ -198,8 +198,8 @@ test_default_wheel_is_sane(void)
 
     for (c = 0; c < 3; ++c) {
         const int n = counts[c];
-        double *xs = malloc(sizeof(double) * n);
-        double *ys = malloc(sizeof(double) * n);
+        double *xs = (double *)malloc(sizeof(double) * n);
+        double *ys = (double *)malloc(sizeof(double) * n);
         FloweryParams p = params(480, 648, 816, 1, 1, 1, 0, 0, 0, n);
         double minx, miny, maxx, maxy;
         char msg[160];
@@ -249,7 +249,7 @@ read_file(const char *path, size_t *len)
     sz = ftell(fp);
     if (sz < 0) { fclose(fp); return NULL; }
     rewind(fp);
-    buf = malloc((size_t)sz + 1);
+    buf = (char *)malloc((size_t)sz + 1);
     if (!buf) { fclose(fp); return NULL; }
     got = fread(buf, 1, (size_t)sz, fp);
     fclose(fp);
@@ -383,10 +383,10 @@ check_svg(const char *path, Oracle *o)
         ++o->failed;
         goto done;
     }
-    ux = malloc(sizeof(double) * samples);
-    uy = malloc(sizeof(double) * samples);
-    xs = malloc(sizeof(double) * samples);
-    ys = malloc(sizeof(double) * samples);
+    ux = (double *)malloc(sizeof(double) * samples);
+    uy = (double *)malloc(sizeof(double) * samples);
+    xs = (double *)malloc(sizeof(double) * samples);
+    ys = (double *)malloc(sizeof(double) * samples);
     if (!ux || !uy || !xs || !ys) {
         printf("FAIL %s: out of memory\n", path);
         ++o->failed;
@@ -506,7 +506,7 @@ usage(const char *prog)
 static int
 run_oracle(int argc, char *argv[])
 {
-    Oracle o = { 0 };
+    Oracle o = {};
     int i;
 
     for (i = 2; i < argc; ++i)

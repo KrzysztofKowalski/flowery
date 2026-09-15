@@ -7,18 +7,17 @@
 #
 # The legacy SVG files are the reference output of the original gnuplot
 # pipeline, so they double as a fidelity check on the port.
+#
+# The test binary is built by the same rule (and so the same flags) as the
+# application, via make -- otherwise the tests could pass against a scalar
+# build of code that ships vectorised, or the other way round.
 set -eu
 cd "$(dirname "$0")"
 
-CC=${CC:-cc}
-CFLAGS=${CFLAGS:--O2 -std=c11 -Wall -Wextra}
-BUILD=.build
-TEST=$BUILD/test_flowery
+TEST=.build/test_flowery
 
 printf 'building %s\n' "$TEST"
-mkdir -p "$BUILD"
-# shellcheck disable=SC2086  # CFLAGS is a list on purpose
-$CC $CFLAGS -I src -o "$TEST" tests/test_flowery.c src/flowery.c -lm
+make -s "$TEST"
 
 printf 'unit tests\n'
 "$TEST"

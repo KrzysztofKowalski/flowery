@@ -13,6 +13,10 @@
 #ifndef FLOWERY_H
 #define FLOWERY_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     double n[3];   /* wheel gear counts */
     double a[3];   /* wheel radii       */
@@ -27,5 +31,9 @@ void flowery_points(const FloweryParams *p, double *xs, double *ys);
 /* Bounding box of a point set. */
 void flowery_bbox(const double *xs, const double *ys, int n,
                   double *minx, double *miny, double *maxx, double *maxy);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif
 
 #endif /* FLOWERY_H */

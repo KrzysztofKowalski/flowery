@@ -1,4 +1,4 @@
-/* main.c — flowery : interactive spirograph renderer.
+/* main.cpp — flowery : interactive spirograph renderer.
  *
  * SDL3 port of the classic gnuplot "wheels on wheels on wheels"
  * (Farris) curve generator that lives in legacy/.
@@ -26,13 +26,22 @@
  * delay the key fires again a few dozen times a second, so n, s and a can be
  * swept without hammering the keyboard. The keys that toggle or save
  * something do not repeat.
+ *
+ * The curve is recomputed only when something about it actually changed, and
+ * the polyline handed to the renderer is thinned to the resolution of the
+ * window - see update_geometry() and build_display_points(). NOTES.md has the
+ * measurements behind both.
  */
 #include <SDL3/SDL.h>
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+
+#if defined(__AVX2__)
+#  include <immintrin.h>
+#endif
 
 #include "flowery.h"
 
@@ -43,6 +52,16 @@
 #define REPEAT_DELAY_MS 300
 #define REPEAT_RATE_MS  40
 #define MAX_HELD        8
+
+/* How far apart, in window points, two drawn vertices have to be to be worth
+ * drawing separately. Segments shorter than this land on the same pixel (or
+ * the next one), so at a million samples the curve is thinned by an order of
+ * magnitude for free. The saved SVG is not thinned. */
+#define MIN_SEGMENT_PTS 0.5
+
+/* Distinct hues the rainbow mode uses. One per segment would mean a million
+ * SDL_RenderLine calls; 256 round the wheel is past what the eye resolves. */
+#define RAINBOW_STEPS 256
 
 typedef struct {
     SDL_Keycode key;
@@ -57,6 +76,7 @@ typedef struct {
     int           outW, outH;   /* render output size in pixels */
     float         scale;        /* pixels per point (2.0 on a Retina screen) */
     bool          fullscreen;
+    bool          vsync;
     FloweryParams p;
     int           sel;          /* selected wheel 0..2 */
     bool          rainbow;
@@ -65,6 +85,18 @@ typedef struct {
     HeldKey       held[MAX_HELD];
     int           nheld;
     Uint64        lastTicks;
+
+    /* Scratch, kept between frames instead of allocated per frame. `xs`/`ys`
+     * are the curve in world coordinates, `pts` the same laid out for the
+     * window, and `disp` the thinned subset that is actually drawn. */
+    double     *xs, *ys;
+    SDL_FPoint *pts;
+    SDL_FPoint *disp;
+    int        *didx;           /* source sample of each disp[] entry */
+    int         cap;            /* samples the buffers can hold */
+    int         ndisp;
+    bool        dirtyCurve;     /* xs/ys need recomputing */
+    bool        dirtyLayout;    /* pts/disp need recomputing */
 } App;
 
 /* ---------------------------------------------------------------- colours */
@@ -109,6 +141,33 @@ update_sizes(App *a)
     SDL_GetWindowSize(a->window, &a->winW, &a->winH);
     SDL_SetRenderScale(a->renderer, scale, scale);
     SDL_GetCurrentRenderOutputSize(a->renderer, &a->outW, &a->outH);
+    a->dirtyLayout = true;
+}
+
+/* The buffers follow the sample count, which the user can double and halve,
+ * so they are grown on demand rather than once up front. */
+static bool
+ensure_buffers(App *a, int n)
+{
+    if (n <= a->cap) return true;
+
+    double     *xs   = (double *)realloc(a->xs, sizeof(double) * n);
+    double     *ys   = (double *)realloc(a->ys, sizeof(double) * n);
+    SDL_FPoint *pts  = (SDL_FPoint *)realloc(a->pts, sizeof(SDL_FPoint) * n);
+    SDL_FPoint *disp = (SDL_FPoint *)realloc(a->disp, sizeof(SDL_FPoint) * n);
+    int        *didx = (int *)realloc(a->didx, sizeof(int) * n);
+
+    /* If any of them failed, keep what we had and report; the caller leaves
+     * the frame alone rather than drawing from a half-updated set. */
+    if (xs) a->xs = xs;
+    if (ys) a->ys = ys;
+    if (pts) a->pts = pts;
+    if (disp) a->disp = disp;
+    if (didx) a->didx = didx;
+    if (!xs || !ys || !pts || !disp || !didx) return false;
+
+    a->cap = n;
+    return true;
 }
 
 /* Map world coordinates to the drawing surface, preserving aspect
@@ -142,10 +201,95 @@ build_screen_points(const App *a, const double *xs, const double *ys,
     cx = (minx + maxx) / 2.0;
     cy = (miny + maxy) / 2.0;
 
-    for (int i = 0; i < n; ++i) {
+    int i = 0;
+#if defined(__AVX2__)
+    /* Four points at a time. The operations are the same ones, in the same
+     * order, as the scalar loop below, so this is bit-for-bit identical. */
+    {
+        const __m256d vscale = _mm256_set1_pd(scale);
+        const __m256d vmx = _mm256_set1_pd(mx), vmy = _mm256_set1_pd(my);
+        const __m256d vcx = _mm256_set1_pd(cx), vcy = _mm256_set1_pd(cy);
+
+        for (; i + 4 <= n; i += 4) {
+            const __m256d x = _mm256_loadu_pd(xs + i);
+            const __m256d y = _mm256_loadu_pd(ys + i);
+            const __m256d sx = _mm256_add_pd(
+                vmx, _mm256_mul_pd(_mm256_sub_pd(x, vcx), vscale));
+            const __m256d sy = _mm256_sub_pd(
+                vmy, _mm256_mul_pd(_mm256_sub_pd(y, vcy), vscale));
+            const __m128 fx = _mm256_cvtpd_ps(sx);
+            const __m128 fy = _mm256_cvtpd_ps(sy);
+            /* interleave into SDL_FPoint {x,y} pairs */
+            _mm_storeu_ps((float *)(pts + i),     _mm_unpacklo_ps(fx, fy));
+            _mm_storeu_ps((float *)(pts + i + 2), _mm_unpackhi_ps(fx, fy));
+        }
+    }
+#endif
+    for (; i < n; ++i) {
         pts[i].x = (float)(mx + (xs[i] - cx) * scale);
         pts[i].y = (float)(my - (ys[i] - cy) * scale); /* flip y for screen */
     }
+}
+
+/* Thin the laid-out polyline down to what the window can actually show.
+ *
+ * A point is kept only once it is MIN_SEGMENT_PTS away from the last kept
+ * one, so a segment is never longer than that for the curve's shape to bend
+ * inside it, and never shorter than a pixel for the rasteriser to care. The
+ * last sample is always kept so the loop still closes. At the default sample
+ * count this keeps everything; it is only at six figures that it matters.
+ * `didx` records where each kept point came from, so the rainbow gradient
+ * stays anchored to the curve's parameter rather than to the thinned list. */
+static int
+build_display_points(const SDL_FPoint *pts, int n, SDL_FPoint *out, int *didx)
+{
+    int m = 0;
+
+    if (n <= 0) return 0;
+    out[0] = pts[0];
+    didx[0] = 0;
+    m = 1;
+    if (n == 1) return m;
+
+    {
+        const float minsep2 = MIN_SEGMENT_PTS * MIN_SEGMENT_PTS;
+        for (int i = 1; i < n - 1; ++i) {
+            const float dx = pts[i].x - out[m - 1].x;
+            const float dy = pts[i].y - out[m - 1].y;
+            if (dx * dx + dy * dy >= minsep2) {
+                out[m] = pts[i];
+                didx[m] = i;
+                ++m;
+            }
+        }
+    }
+
+    out[m] = pts[n - 1];
+    didx[m] = n - 1;
+    ++m;
+    return m;
+}
+
+/* Rebuild exactly as much as is out of date. Cheap when nothing changed,
+ * which is the common case: an idle frame does no curve maths at all. */
+static bool
+update_geometry(App *a)
+{
+    const int n = a->p.samples > 0 ? a->p.samples : 1;
+
+    if (!ensure_buffers(a, n)) return false;
+
+    if (a->dirtyCurve) {
+        flowery_points(&a->p, a->xs, a->ys);
+        a->dirtyCurve = false;
+        a->dirtyLayout = true;
+    }
+    if (a->dirtyLayout) {
+        build_screen_points(a, a->xs, a->ys, a->pts, n);
+        a->ndisp = build_display_points(a->pts, n, a->disp, a->didx);
+        a->dirtyLayout = false;
+    }
+    return true;
 }
 
 /* ------------------------------------------------------------ randomise */
@@ -171,18 +315,17 @@ set_default_wheels(FloweryParams *p)
 /* --------------------------------------------------------------- saving */
 
 /* The SVG is vector, so it is written in window points: it carries no
- * resolution of its own and can be scaled to anything. */
+ * resolution of its own and can be scaled to anything. It gets every sample,
+ * not the thinned display list. */
 static void
 save_svg(const App *a, const char *fname)
 {
-    double *xs, *ys;
-    SDL_FPoint *pts;
+    const int n = a->p.samples;
+    double *xs = (double *)malloc(sizeof(double) * n);
+    double *ys = (double *)malloc(sizeof(double) * n);
+    SDL_FPoint *pts = (SDL_FPoint *)malloc(sizeof(SDL_FPoint) * n);
     FILE *fp;
 
-    int n = a->p.samples;
-    xs = malloc(sizeof(double) * n);
-    ys = malloc(sizeof(double) * n);
-    pts = malloc(sizeof(SDL_FPoint) * n);
     if (!xs || !ys || !pts) { free(xs); free(ys); free(pts); return; }
 
     flowery_points(&a->p, xs, ys);
@@ -223,36 +366,45 @@ save_bmp(App *a, const char *fname)
 /* ---------------------------------------------------------------- render */
 
 static void
-render_frame(App *a)
+draw_curve(App *a)
 {
-    const int n = a->p.samples;
-    double *xs = malloc(sizeof(double) * n);
-    double *ys = malloc(sizeof(double) * n);
-    SDL_FPoint *pts = malloc(sizeof(SDL_FPoint) * n);
-    if (!xs || !ys || !pts) return;
+    const int m = a->ndisp;
+    const SDL_FPoint *pts = a->disp;
 
-    flowery_points(&a->p, xs, ys);
-    build_screen_points(a, xs, ys, pts, n);
+    if (m < 2) return;
 
-    SDL_SetRenderDrawColor(a->renderer, 8, 8, 12, 255);
-    SDL_RenderClear(a->renderer);
-
-    if (a->rainbow) {
-        /* draw each segment with its own hue */
-        for (int i = 1; i < n; ++i) {
-            float hue = 360.0f * (float)i / (float)n;
-            Uint8 r, g, b;
-            hsv_to_rgb(hue, &r, &g, &b);
-            SDL_SetRenderDrawColor(a->renderer, r, g, b, 255);
-            SDL_RenderLine(a->renderer, pts[i-1].x, pts[i-1].y,
-                           pts[i].x, pts[i].y);
-        }
-    } else {
+    if (!a->rainbow) {
         SDL_SetRenderDrawColor(a->renderer, 148, 0, 211, 255);
-        SDL_RenderLines(a->renderer, pts, n);
+        SDL_RenderLines(a->renderer, pts, m);
+        return;
     }
 
-    free(xs); free(ys); free(pts);
+    /* A hue per segment would be one draw call per segment. The hue rises
+     * monotonically with the sample index, so equal steps come out as
+     * contiguous runs and each run is a single polyline; the gradient is the
+     * same, the call count drops by three orders of magnitude. */
+    const int n = a->p.samples;
+    int s = 0;
+    while (s < m - 1) {
+        const int q = (int)((long long)a->didx[s + 1] * RAINBOW_STEPS / n);
+        int e = s;
+        while (e < m - 2 && (int)((long long)a->didx[e + 2] * RAINBOW_STEPS / n) == q)
+            ++e;
+
+        Uint8 r, g, b;
+        hsv_to_rgb(360.0f * ((float)q + 0.5f) / (float)RAINBOW_STEPS, &r, &g, &b);
+        SDL_SetRenderDrawColor(a->renderer, r, g, b, 255);
+        SDL_RenderLines(a->renderer, pts + s, e - s + 2);
+        s = e + 1;
+    }
+}
+
+static void
+render_frame(App *a)
+{
+    SDL_SetRenderDrawColor(a->renderer, 8, 8, 12, 255);
+    SDL_RenderClear(a->renderer);
+    draw_curve(a);
 }
 
 /* ------------------------------------------------------------- text/HUD */
@@ -297,12 +449,12 @@ format_status(const App *a, char *buf, size_t bufsz)
 {
     snprintf(buf, bufsz,
              "wheel[%d] n=%3.0f n=%3.0f n=%3.0f   a=(%.2f %.2f %.2f)  "
-             "s=(%.3f %.3f %.3f)   samples=%d%s   %dx%d@%.0fx",
+             "s=(%.3f %.3f %.3f)   samples=%d (drawing %d)%s   %dx%d@%.0fx",
              a->sel,
              a->p.n[0], a->p.n[1], a->p.n[2],
              a->p.a[0], a->p.a[1], a->p.a[2],
              a->p.s[0], a->p.s[1], a->p.s[2],
-             a->p.samples,
+             a->p.samples, a->ndisp,
              a->rainbow ? "  rainbow" : "",
              a->winW, a->winH, (double)a->scale);
 }
@@ -366,32 +518,40 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
 
     case SDLK_UP:
         a->p.n[k] += shifted ? 10.0 : 1.0;
+        a->dirtyCurve = true;
         break;
     case SDLK_DOWN:
         a->p.n[k] -= shifted ? 10.0 : 1.0;
+        a->dirtyCurve = true;
         break;
     case SDLK_LEFT:
         a->p.s[k] -= shifted ? 0.05 : 0.01;
         a->p.s[k] = fmod(a->p.s[k] + 1.0, 1.0);
+        a->dirtyCurve = true;
         break;
     case SDLK_RIGHT:
         a->p.s[k] = fmod(a->p.s[k] + (shifted ? 0.05 : 0.01), 1.0);
+        a->dirtyCurve = true;
         break;
 
     case SDLK_LEFTBRACKET:
         a->p.a[k] -= shifted ? 0.5 : 0.1;
         if (a->p.a[k] < 0.0) a->p.a[k] = 0.0;
+        a->dirtyCurve = true;
         break;
     case SDLK_RIGHTBRACKET:
         a->p.a[k] += shifted ? 0.5 : 0.1;
+        a->dirtyCurve = true;
         break;
 
     case SDLK_PLUS:
     case SDLK_EQUALS:
         a->p.samples = (int)fmin((double)a->p.samples * 2.0, 1048576.0);
+        a->dirtyCurve = true;
         break;
     case SDLK_MINUS:
         a->p.samples = (int)fmax((double)a->p.samples / 2.0, 32.0);
+        a->dirtyCurve = true;
         break;
 
     case SDLK_F:
@@ -406,6 +566,7 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
         break;
     case SDLK_R:
         randomize_wheels(&a->p);
+        a->dirtyCurve = true;
         break;
     case SDLK_S:
         {
@@ -442,7 +603,13 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
 int
 main(int argc, char *argv[])
 {
-    App app = {0};
+    App app = {};
+    app.xs = app.ys = NULL;
+    app.pts = app.disp = NULL;
+    app.didx = NULL;
+    app.cap = 0;
+    app.dirtyCurve = true;
+    app.dirtyLayout = true;
 
     if (argc > 4) {
         /* ./flowery n1 n2 n3 [samples] */
@@ -488,7 +655,13 @@ main(int argc, char *argv[])
     SDL_Log("window %dx%d points, renderer %dx%d pixels (scale %.2f)",
             app.winW, app.winH, app.outW, app.outH, (double)app.scale);
 
-    char status[256];
+    /* Pace the loop off the display when we can (it also stops the tearing
+     * an 8 ms sleep never did); only fall back to sleeping if vsync is not
+     * available, as it is not for the offscreen driver. */
+    app.vsync = SDL_SetRenderVSync(app.renderer, 1);
+    SDL_Log("vsync: %s", app.vsync ? "on" : "unavailable");
+
+    char status[320];
 
     while (1) {
         SDL_Event ev;
@@ -539,8 +712,11 @@ main(int argc, char *argv[])
             double dt = (double)(now - app.lastTicks) / 1000.0;
             for (int k = 0; k < WHEELS; ++k)
                 app.p.s[k] = fmod(app.p.s[k] + 0.008 * (k + 1) * dt, 1.0);
+            app.dirtyCurve = true;
         }
         app.lastTicks = now;
+
+        if (!update_geometry(&app)) continue;
 
         render_frame(&app);
         format_status(&app, status, sizeof status);
@@ -549,6 +725,7 @@ main(int argc, char *argv[])
             draw_help(&app);
 
         SDL_RenderPresent(app.renderer);
-        SDL_Delay(8);
+        if (!app.vsync)
+            SDL_Delay(8);
     }
 }
