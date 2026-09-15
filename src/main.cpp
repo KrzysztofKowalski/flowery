@@ -31,6 +31,11 @@
  * the polyline handed to the renderer is thinned to the resolution of the
  * window - see update_geometry() and build_display_points(). NOTES.md has the
  * measurements behind both.
+ *
+ * Everything is drawn in physical pixels: the display scale is applied to the
+ * layout in build_screen_points() and the renderer is left at scale 1, which
+ * is what keeps SDL_RenderLines on its driver line path. The HUD and the saved
+ * SVG are the two exceptions, both for the same reason - they are in points.
  */
 #include <SDL3/SDL.h>
 
@@ -127,10 +132,16 @@ hsv_to_rgb(float h, Uint8 *r, Uint8 *g, Uint8 *b)
 /* --------------------------------------------------------------- sizing */
 
 /* A Retina (or any scaled) display gives us a back buffer larger than the
- * window: the window is measured in points, the back buffer in pixels. All
- * drawing is done in points with the renderer scaled up, so the curve is
- * rasterised at the full native resolution instead of being stretched, and
- * looks the same size on every display. */
+ * window: the window is measured in points, the back buffer in pixels. The
+ * curve is laid out in those pixels - build_screen_points() applies the
+ * display scale - and the renderer is left at scale 1. That last part is what
+ * matters for speed: with the renderer scaled up, SDL_RenderLines cannot use
+ * the driver's line API and falls back to one quad per line *pixel*, which at
+ * 2880x1800 costs an order of magnitude more than a GL_LINE_STRIP.
+ *
+ * The HUD is drawn in points instead (draw_overlays()), because SDL's debug
+ * font is a fixed 8x8 *pixels*: at scale 1 it would come out half size on a 2x
+ * display. */
 static void
 update_sizes(App *a)
 {
@@ -139,7 +150,7 @@ update_sizes(App *a)
     if (!(scale > 0.0f)) scale = 1.0f;
     a->scale = scale;
     SDL_GetWindowSize(a->window, &a->winW, &a->winH);
-    SDL_SetRenderScale(a->renderer, scale, scale);
+    SDL_SetRenderScale(a->renderer, 1.0f, 1.0f);
     SDL_GetCurrentRenderOutputSize(a->renderer, &a->outW, &a->outH);
     a->dirtyLayout = true;
 }
@@ -171,10 +182,15 @@ ensure_buffers(App *a, int n)
 }
 
 /* Map world coordinates to the drawing surface, preserving aspect
- * ratio (like gnuplot `set size ratio -1`) and centering. */
+ * ratio (like gnuplot `set size ratio -1`) and centering.
+ *
+ * The layout is worked out in window points and then multiplied by `zoom`:
+ * the screen wants physical pixels (zoom = the display scale), the saved SVG
+ * wants points (zoom = 1), which is what keeps the file independent of the
+ * display it happened to be written on. */
 static void
 build_screen_points(const App *a, const double *xs, const double *ys,
-                    SDL_FPoint *pts, int n)
+                    SDL_FPoint *pts, int n, double zoom)
 {
     double minx, miny, maxx, maxy;
     double scale, mx, my;
@@ -194,9 +210,9 @@ build_screen_points(const App *a, const double *xs, const double *ys,
     spanX = (maxx - minx) > 1e-12 ? (maxx - minx) : 1.0;
     spanY = (maxy - miny) > 1e-12 ? (maxy - miny) : 1.0;
 
-    scale = fmin(availW / spanX, availH / spanY);
-    mx = (double)a->winW / 2.0;
-    my = (double)a->winH / 2.0;
+    scale = fmin(availW / spanX, availH / spanY) * zoom;
+    mx = (double)a->winW / 2.0 * zoom;
+    my = (double)a->winH / 2.0 * zoom;
 
     cx = (minx + maxx) / 2.0;
     cy = (miny + maxy) / 2.0;
@@ -233,15 +249,18 @@ build_screen_points(const App *a, const double *xs, const double *ys,
 
 /* Thin the laid-out polyline down to what the window can actually show.
  *
- * A point is kept only once it is MIN_SEGMENT_PTS away from the last kept
- * one, so a segment is never longer than that for the curve's shape to bend
- * inside it, and never shorter than a pixel for the rasteriser to care. The
- * last sample is always kept so the loop still closes. At the default sample
- * count this keeps everything; it is only at six figures that it matters.
- * `didx` records where each kept point came from, so the rainbow gradient
- * stays anchored to the curve's parameter rather than to the thinned list. */
+ * A point is kept only once it is `minsep` away from the last kept one, so a
+ * segment is never longer than that for the curve's shape to bend inside it,
+ * and never shorter than a pixel for the rasteriser to care. The caller
+ * passes one device pixel (MIN_SEGMENT_PTS in window points), because the
+ * points handed in are device pixels. The last sample is always kept so the
+ * loop still closes. At the default sample count this keeps everything; it is
+ * only at six figures that it matters. `didx` records where each kept point
+ * came from, so the rainbow gradient stays anchored to the curve's parameter
+ * rather than to the thinned list. */
 static int
-build_display_points(const SDL_FPoint *pts, int n, SDL_FPoint *out, int *didx)
+build_display_points(const SDL_FPoint *pts, int n, SDL_FPoint *out, int *didx,
+                     float minsep)
 {
     int m = 0;
 
@@ -252,7 +271,7 @@ build_display_points(const SDL_FPoint *pts, int n, SDL_FPoint *out, int *didx)
     if (n == 1) return m;
 
     {
-        const float minsep2 = MIN_SEGMENT_PTS * MIN_SEGMENT_PTS;
+        const float minsep2 = minsep * minsep;
         for (int i = 1; i < n - 1; ++i) {
             const float dx = pts[i].x - out[m - 1].x;
             const float dy = pts[i].y - out[m - 1].y;
@@ -285,8 +304,9 @@ update_geometry(App *a)
         a->dirtyLayout = true;
     }
     if (a->dirtyLayout) {
-        build_screen_points(a, a->xs, a->ys, a->pts, n);
-        a->ndisp = build_display_points(a->pts, n, a->disp, a->didx);
+        build_screen_points(a, a->xs, a->ys, a->pts, n, (double)a->scale);
+        a->ndisp = build_display_points(a->pts, n, a->disp, a->didx,
+                                        (float)(MIN_SEGMENT_PTS * a->scale));
         a->dirtyLayout = false;
     }
     return true;
@@ -329,7 +349,7 @@ save_svg(const App *a, const char *fname)
     if (!xs || !ys || !pts) { free(xs); free(ys); free(pts); return; }
 
     flowery_points(&a->p, xs, ys);
-    build_screen_points(a, xs, ys, pts, n);
+    build_screen_points(a, xs, ys, pts, n, 1.0);   /* points, not pixels */
 
     fp = fopen(fname, "w");
     if (!fp) { free(xs); free(ys); free(pts); return; }
@@ -457,6 +477,23 @@ format_status(const App *a, char *buf, size_t bufsz)
              a->p.samples, a->ndisp,
              a->rainbow ? "  rainbow" : "",
              a->winW, a->winH, (double)a->scale);
+}
+
+/* The status line and the help overlay stay in window points, so the renderer
+ * goes back to the display scale for them and back to 1 for the curve: one
+ * device pixel per point is what the curve wants, and a point per pixel is
+ * what the 8x8-pixel debug font needs to keep its size on any display. */
+static void
+draw_overlays(App *a)
+{
+    char status[320];
+
+    SDL_SetRenderScale(a->renderer, a->scale, a->scale);
+    format_status(a, status, sizeof status);
+    draw_debug_text(a, status);
+    if (a->help)
+        draw_help(a);
+    SDL_SetRenderScale(a->renderer, 1.0f, 1.0f);
 }
 
 /* ----------------------------------------------------------------- input */
@@ -644,6 +681,13 @@ main(int argc, char *argv[])
         SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
         return 1;
     }
+    /* Left alone, SDL draws a line as one quad per line *pixel*; at 2880x1800
+     * that is 20x the cost of the driver's own line API, which is only used
+     * at render scale 1. An explicit SDL_RENDER_LINE_METHOD wins, so the
+     * other methods stay reachable for comparison. Must precede the renderer. */
+    if (!SDL_GetHint(SDL_HINT_RENDER_LINE_METHOD))
+        SDL_SetHint(SDL_HINT_RENDER_LINE_METHOD, "2");
+
     app.renderer = SDL_CreateRenderer(app.window, NULL);
     if (!app.renderer) {
         SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
@@ -660,8 +704,6 @@ main(int argc, char *argv[])
      * available, as it is not for the offscreen driver. */
     app.vsync = SDL_SetRenderVSync(app.renderer, 1);
     SDL_Log("vsync: %s", app.vsync ? "on" : "unavailable");
-
-    char status[320];
 
     while (1) {
         SDL_Event ev;
@@ -719,10 +761,7 @@ main(int argc, char *argv[])
         if (!update_geometry(&app)) continue;
 
         render_frame(&app);
-        format_status(&app, status, sizeof status);
-        draw_debug_text(&app, status);
-        if (app.help)
-            draw_help(&app);
+        draw_overlays(&app);
 
         SDL_RenderPresent(app.renderer);
         if (!app.vsync)
