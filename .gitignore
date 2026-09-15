@@ -1,10 +1,10 @@
-*.png
-commands.sh
-process3.sh
-.DS_Store
-out
-tmp
-parallelcommands.sh
-.idea
-*.iml
-makedirectories.sh
+# build artifacts
+flowery
+*.o
+.build/
+
+# generated images / output
+out/
+tmp/
+spiro-*.svg
+*.bmp

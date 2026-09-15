@@ -1,0 +1,10 @@
+*.png
+commands.sh
+process3.sh
+.DS_Store
+out
+tmp
+parallelcommands.sh
+.idea
+*.iml
+makedirectories.sh
