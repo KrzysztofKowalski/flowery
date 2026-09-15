@@ -22,7 +22,7 @@ z(t) = a₁·e^{i·2π(n₁·t + s₁)} + a₂·e^{i·2π(n₂·t + s₂)} + a�
 
 ## Requirements
 
-- A C compiler
+- A C++20 compiler
 - [SDL3](https://github.com/libsdl-org/SDL) development package
   (`libsdl3-dev` on Debian/Ubuntu, `sdl3` on some distros)
 
@@ -33,6 +33,15 @@ z(t) = a₁·e^{i·2π(n₁·t + s₁)} + a₂·e^{i·2π(n₂·t + s₂)} + a�
 ```
 
 or, equivalently, `make`. `./build.sh clean` removes the binary.
+
+The build uses `-march=native`, which is what enables the AVX2 + FMA paths in
+the curve kernel, the bounding box and the screen mapping. The sources build
+without it and fall back to scalar code that produces the same numbers, just
+slower — for a portable binary, override the flags:
+
+```sh
+make CXXFLAGS='-O2 -std=c++20 -Wall -Wextra'
+```
 
 ## Run
 
@@ -101,24 +110,27 @@ rendered at the display's native resolution rather than stretched.
 
 - `s` writes `spiro-<n1>-<n2>-<n3>-<samples>.svg` — a vector polyline in
   window points, so it has no resolution of its own (close to what
-  `legacy/cx.sh` produced).
+  `legacy/cx.sh` produced). It always holds every sample; the curve drawn in
+  the window is thinned to what the screen can show when the sample count runs
+  into six figures, and the status line reports both numbers.
 - `b` writes the raw window pixels as BMP (`spiro-...bmp`) — at the native
   resolution of the display, i.e. 2× on a 2× screen.
 
 ## Source layout
 
 ```
-build.sh       build          test.sh   unit tests + gnuplot fidelity check
-run.sh         build and run
-src/flowery.h  curve math
-src/flowery.c  curve math implementation
-src/main.c     SDL3 app, input handling, rendering
-tests/         the test suite
-legacy/        the original shell + gnuplot version
+build.sh         build       test.sh   unit tests + gnuplot fidelity check
+run.sh           build and run
+src/flowery.h    curve math
+src/flowery.cpp  curve math, AVX2 kernel and bounding box
+src/main.cpp     SDL3 app, input handling, rendering
+tests/           the test suite
+legacy/          the original shell + gnuplot version
 ```
 
 [NOTES.md](NOTES.md) records what the legacy pipeline does, the conventions
-the port has to match, and how the two were shown to agree.
+the port has to match, how the two were shown to agree, and what the
+optimisations were worth.
 
 ## License
 
