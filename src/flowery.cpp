@@ -32,26 +32,46 @@ constexpr double kTau = 6.283185307179586476925286766559;
 #ifdef FLOWERY_HAVE_AVX2
 
 /* Largest |angle| the fixed Cody-Waite reduction below stays exact for.
- * TAU * 99999 (the biggest wheel in the legacy samples) is 6.3e5, so every
- * sample keeps the fast path; a wheel set to a seven-figure tooth count
- * falls back to libm rather than losing digits. */
-constexpr double kVectorAngleLimit = 1.0e6;
-
-/* pi/2 split into three parts, high to low: the leading 33 bits, the next 33,
- * and the rest. Subtracting them one at a time (Cody-Waite) keeps the reduced
- * argument exact, which reducing by a single rounded pi/2 would not - that
- * loses about log2(x) bits and is what makes a naive vector sin/cos useless
- * for large arguments.
  *
- * These are fdlibm's pio2_1 / pio2_2 / pio2_3, which are a *split*: each is
- * the correctly rounded remainder of pi/2 after the previous ones. fdlibm's
- * pio2_1t / pio2_2t / pio2_3t look similar but are alternatives used by its
- * two-step refinement, not additional terms - adding all six subtracts pi/2
- * three times over. */
-constexpr double kPio2_1 = 1.57079632673412561417e+00;
-constexpr double kPio2_2 = 6.07710050630396597660e-11;
-constexpr double kPio2_3 = 2.02226624871116645580e-21;
+ * The reduction needs fn * kPio2_i to be exactly representable, and fn is
+ * about |x| / (pi/2), so the width of the leading terms caps the range: with
+ * 25 significant bits there, fn may go up to 2^28. 4e8 / (pi/2) = 2.55e8,
+ * just under 2^28, so this is the comfortable end of that range - a wheel
+ * with 63 million teeth. Past it flowery_points falls back to libm, which
+ * reduces exactly. (This used to be 1e6, which a held Shift+Up reached in
+ * ten minutes and which cost a 6.7x cliff when it did.) */
+constexpr double kVectorAngleLimit = 4.0e8;
 
+/* pi/2 split into four parts, high to low: 25 significant bits, 24, 25, and
+ * the rest as a full double. Subtracting them one at a time (Cody-Waite)
+ * keeps the reduced argument exact, which reducing by a single rounded pi/2
+ * would not - that loses about log2(x) bits and is what makes a naive vector
+ * sin/cos useless for large arguments.
+ *
+ * The widths are the whole trick, and they are narrower than fdlibm's for a
+ * reason. A term with b significant bits makes fn * term exact only while
+ * fn < 2^(53-b): at fn = 2^28 even the 25-bit leading term needs 53 bits, so
+ * there is no room for a wider one. fdlibm's pio2_1 / pio2_2 / pio2_3 are a
+ * 33-bit split, which is exact only to fn < 2^20; at fn = 2^28 its first
+ * product rounds at ulp(4e8)/2 = 3e-8, eight orders of magnitude worse than
+ * the double it is subtracted from, and the reduced argument is ruined. What
+ * the extra terms buy is coverage: four of them sum to pi/2 to 2.3e-41, so
+ * four is what 81 bits (53 + 28) of accuracy at the top of the range costs.
+ *
+ * The split is derived from pi/2 rather than copied. fdlibm's pio2_1t /
+ * pio2_2t / pio2_3t look like further terms and are actually *alternatives*
+ * used by its two-step refinement; adding all six subtracts pi/2 three times
+ * over, and the symptom is a visibly wrong curve, not a slightly off one. */
+constexpr double kPio2_1 = 1.57079631090164184570e+00;
+constexpr double kPio2_2 = 1.58932547122958567343e-08;
+constexpr double kPio2_3 = 6.12323393205359425102e-17;
+constexpr double kPio2_4 = 6.36831716351094990796e-25;
+
+/* 2/pi, to 53 bits. Rounding fn = nint(x * this) can only go wrong when the
+ * exact x*(2/pi) sits within ~|x|*2^-53 of a half-integer, and there the two
+ * candidate fn values both leave |r| <= pi/4 - one lands on +pi/4, the other
+ * on -pi/4 - so the quadrant fixup still returns the right answer. No second
+ * 2/pi term is needed for that. */
 constexpr double kTwoOverPi = 6.36619772367581382433e-01;
 
 /* Widen a vector of 0 / -1 int32 lanes into a 0.0 / all-ones double mask. */
@@ -95,9 +115,9 @@ inline __m256d poly_cos(__m256d r)
 /* sin and cos of four doubles at once.
  *
  * x = q*(pi/2) + r with |r| <= pi/4, then the quadrant picks between the two
- * polynomials and their signs. The reduction subtracts all three parts of
+ * polynomials and their signs. The reduction subtracts all four parts of
  * pi/2 unconditionally: the later terms are no-ops in the common case and
- * cost two FMAs, which is cheaper than branching per lane. */
+ * cost three FMAs, which is cheaper than branching per lane. */
 inline void sincos4(__m256d x, __m256d *sinp, __m256d *cosp)
 {
     const __m256d invpio2 = _mm256_set1_pd(kTwoOverPi);
@@ -107,6 +127,7 @@ inline void sincos4(__m256d x, __m256d *sinp, __m256d *cosp)
     __m256d r = _mm256_fnmadd_pd(fn, _mm256_set1_pd(kPio2_1), x);
     r = _mm256_fnmadd_pd(fn, _mm256_set1_pd(kPio2_2), r);
     r = _mm256_fnmadd_pd(fn, _mm256_set1_pd(kPio2_3), r);
+    r = _mm256_fnmadd_pd(fn, _mm256_set1_pd(kPio2_4), r);
 
     __m128i q  = _mm_and_si128(_mm256_cvttpd_epi32(fn), _mm_set1_epi32(3));
     __m128i q0 = _mm_and_si128(q, _mm_set1_epi32(1));   /* low bit  */

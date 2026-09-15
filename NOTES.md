@@ -97,19 +97,29 @@ one file.
 
 Measured on the development machine (Haswell i7-4850HQ, 2.3 GHz, AVX2 + FMA but
 no AVX-512; gcc 16.2.1, glibc 2.44). Two setups were used, and they disagree
-badly enough that both are recorded here:
+enough that both are recorded here:
 
-* **offscreen** (`SDL_VIDEODRIVER=offscreen`) uses SDL's *software* renderer and
-  reproduces to the millisecond between runs. It is the one to quote.
-* **on the real display** SDL picks the `opengl` renderer. Timings taken there
-  are contaminated by shader compilation, buffer allocation and vsync on the
-  first frames: an early probe reported 25 ms for work that a warmed-up
-  standalone probe measures at **0.36 ms**. Do not trust a single-digit frame
-  count from a freshly started window.
+* **offscreen** (`SDL_VIDEODRIVER=offscreen`) reproduces far better between
+  runs and is the one to quote for anything below the draw.
+* **on the real display** timings are contaminated by shader compilation,
+  buffer allocation and vsync on the first frames: an early probe reported
+  25 ms for work that a warmed-up standalone probe measures at **0.36 ms**. Do
+  not trust a single-digit frame count from a freshly started window. Warm up
+  (the numbers below use 120 frames) and take the best of several.
+
+An earlier version of this section said the offscreen setup "uses SDL's
+*software* renderer". It does not, at least not with SDL 3.4: `SDL_GetRendererName()`
+reports `opengl` under the offscreen driver too, and `glGetString(GL_RENDERER)`
+gives the same `Mesa Intel(R) Iris(R) Pro Graphics P5200` on both. The two
+setups differ in back-buffer size and in whether the frame goes through the
+compositor (900x900 px against 1800x1800 px), not in the renderer. The earlier
+"reproduces to the millisecond" claim is also optimistic: the same row measured
+57.5 ms and 61.3 ms in two runs of the same binary, so anything under ~10% is
+noise.
 
 ### The sampling kernel
 
-`flowery_points` was 110 ns per sample. It is now 16.1 ns, a **6.8x** speedup,
+`flowery_points` was 110 ns per sample. It is now 16.4 ns, a **6.7x** speedup,
 with the curve still matching gnuplot to the same 0.043 px as before.
 
 | change | ns/sample | speedup |
@@ -118,7 +128,8 @@ with the curve still matching gnuplot to the same 0.043 px as before.
 | `-O3 -march=native` alone | 104 | 1.06x |
 | angle hoisted out of the loop | 89 | 1.2x |
 | `-ffast-math -fopenmp-simd` → `libmvec` sincos | 17 | 6.4x |
-| **what shipped**: hand-written AVX2 sin/cos | **16.1** | **6.8x** |
+| hand-written AVX2 sin/cos | 16.1 | 6.8x |
+| four-term reduction, for the 400x wider range below | **16.4** | **6.7x** |
 | order-3 recurrence, resync every 256 (not used) | 8.8 | 12.3x |
 
 Two routes to a vector sin/cos were rejected before this one:
@@ -155,12 +166,53 @@ against a scalar reference over 1000003 samples differs by at most 8.9e-16,
 which is why the 1e-12 unit tests and the gnuplot comparison both come out
 unchanged.
 
-The reduction is only exact while the reduced argument fits comfortably in a
-double, so the vector path is taken only when `TAU * (|n| + |s|)` is at most
-1e6 per wheel — that covers every sample in `legacy/` (the largest is 6.3e5)
-and every wheel the UI reaches in normal use. Past that `flowery_points` falls
-back to libm, which reduces exactly. A wheel set to a seven-figure tooth count
-therefore still draws correctly, just slower.
+The reduction is exact only while `fn * kPio2_i` is exactly representable, so
+the vector path needs a bound — and the bound it had, `TAU * (|n| + |s|) <= 1e6`
+per wheel, was a cliff rather than a slope. At N=1048576 the same curve costs
+**16.4 ms** at `n = 159154` and **109.8 ms** at `n = 159155`: **6.7x** for one
+press of an arrow key. Holding Shift+Up adds ten teeth every 40 ms, so ten
+minutes of holding reaches it, and `./flowery 200000 1 1` reaches it in one
+command. Above the cliff the per-sample cost is flat, so this is a step from
+one code path to another and not a gradual degradation.
+
+The split is now derived from pi/2 instead of copied from fdlibm: four terms of
+25 / 24 / 25 significant bits plus a full-width tail, all four subtracted
+unconditionally. That costs **+5.8%** on the kernel (16.4 -> 17.3 ns/sample)
+and makes `fn * term` exact up to `fn < 2^28`; the four terms sum to pi/2 to
+2e-41, so the limit moves from 1e6 to 4e8 — a wheel with 63 million teeth, 400x
+further out. Past 4e8 `flowery_points` still falls back to libm.
+
+The extra term is worth its 5.8% because the fallback is worse than it looks:
+glibc takes its own multi-precision branch once the angle passes about 1e8, so
+past the new limit the scalar path is not 6.8x slower than the vector one but
+**13x** — 98 ns/sample below 1e8, 190 at 3e8, 225 at 1e9. A wheel big enough to
+leave the vector path is slow twice over.
+
+Verified against libm rather than asserted, over 40M arguments (8M per range,
+plus the quadrant boundaries, which are the reduction's worst case — `fn*pi/2`
+cancels exactly there, so `|r|` peeks past pi/4 and the polynomial is evaluated
+at the edge of its interval):
+
+| range | worst relative error | worst ULP |
+|---|---|---|
+| [0, 1e6] (the old limit) | 2.22e-16 | 1.0 |
+| [1e6, 1e7] | 2.24e-16 | 2.0 |
+| [1e7, 1e8] | 2.32e-16 | 2.0 |
+| [1e8, 4e8] (the new limit) | 2.48e-16 | 2.0 |
+| near k*(pi/2), k < 2e6 | 2.22e-16 | 1.0 |
+| near k*(pi/2), k ~ 1e8 | 2.22e-16 | 1.0 |
+
+Not one argument in 40M was more than 2 ULP from libm. The whole kernel against
+a scalar reference over 200003 samples still differs by at most 8.9e-16, the
+same figure as before.
+
+The price is that the curve is no longer *bit*-identical to the old one: the
+two reductions round differently in the last bit, so 5-17% of points move, by
+at most 1 ULP. That is the same size as the difference either version has
+against libm (9.2e-16), and both are equally close to it, so this is a wash
+rather than a loss. The externally visible numbers do not move: 388/388 unit
+tests, 594/614 files, 0.043 px average and 0.094 px worst point, before and
+after.
 
 ### The bounding box and the screen mapping
 
@@ -185,6 +237,82 @@ N=1048576.
 The mallocs turned out to be a red herring on their own — 0.01 ms plus ~7 ms of
 page faults at N=1048576 — but they are gone anyway.
 
+### Where a frame actually goes
+
+The complaint that started this was "some values are fast, others are very
+slow". A sweep over the wheel values a user can reach, 900x900 offscreen, best
+of 7 after 40 warm frames. `arc` is the length of the drawn polyline in window
+points — how much path the rasteriser has to lay down, before any overdraw —
+and `drawn` the number of vertices left after thinning.
+
+| wheels | samples | kernel ms (before → after) | bbox | thin | drawn | arc pts | draw ms |
+|---|---|---|---|---|---|---|---|
+| 5/7/12 | 2001 | 0.033 → 0.035 | 0.001 | 0.004 | 1993 | 12992 | 0.18 |
+| 5/7/12 | 1048576 | 17.4 → 18.3 | 0.94 | 2.17 | 25621 | 12993 | 1.70 |
+| 480/648/816 | 2001 | 0.033 → 0.035 | 0.001 | 0.004 | 2001 | 647985 | 1.90 |
+| 480/648/816 | 1048576 | 17.3 → 18.3 | 0.95 | 2.26 | 802681 | 808550 | 61.3 |
+| 12000/15000/20000 | 2001 | 0.033 → 0.038 | 0.001 | 0.004 | 2001 | 1560000 | 0.14 |
+| 12000/15000/20000 | 1048576 | 17.2 → 18.3 | 0.94 | 2.48 | 1045026 | 21390707 | minutes |
+| 159155/159156/159157 | 2001 | 0.232 → 0.035 | 0.001 | 0.004 | 1999 | 725075 | 2.04 |
+| 159155/159156/159157 | 1048576 | 107.2 → 18.3 | 0.95 | 2.43 | 1047364 | 179685506 | minutes |
+| 2e8/2.4e8/3e8 | 2001 | 1.31 → 1.32 | 0.001 | 0.003 | 2 | 0 | 0.00 |
+| 2e8/2.4e8/3e8 | 1048576 | 532 → 560 | 1.03 | 2.53 | 1048576 | 231645461 | minutes |
+
+Two things fall out of it.
+
+**Above a few tens of thousands of samples the draw is the frame, not the
+curve.** At N=2001 with the default wheels the kernel is 0.033 ms and the draw
+is 1.90 ms; at N=1048576 the kernel is 17-18 ms and the draw is 61 ms. Even at
+the default sample count the curve maths is 1.7% of the frame.
+
+**The draw scales with the curve's arc length on screen, not with `samples`,
+and not with the vertex count either.** The cleanest pair in the table is
+5/7/12 against 480/648/816 at N=2001: both draw 2001 vertices at 900x900, and
+the second takes 10.6x longer (1.90 ms against 0.18 ms) because its polyline is
+50x longer (647985 points against 12992). Nothing else differs. The same
+relationship holds at the top of the range: at N=1048576, 5/7/12 and the
+default wheels draw 25621 and 802681 vertices for 12993 and 808550 points of
+arc, and take 1.70 ms and 61.3 ms.
+
+`arc` is roughly `2*pi * sum(|n_k| * a_k)`, the curve's own length in world
+units, scaled into the window; the wheel values are the whole of it. At
+N=1048576 the default 480/648/816 draws 808550 points of arc and
+159155/159156/159157 draws 179685506 — 222x. The ratio of the teeth is 245x;
+the gap is how much the three wheels cancel against each other in the two
+cases, which scales with `n` too. That is the "some values are fast, others are very slow"
+report, and it is linear in `n` with no cliff in it. The cliff was the kernel's
+and is the one thing that was fixed; this one is the curve being genuinely
+longer.
+
+The sweep also shows a trap in reading any of these rows. Note that at N=2001
+the bottom row costs *nothing* while its neighbour at N=1048576 is the most
+expensive in the table. With `samples = 2001` the sampling step is 1/2000, so a
+wheel whose teeth divide 2000 lands on the same handful of phases at every
+sample: 2e8, 2.4e8 and 3e8 are all multiples of 2000, the curve collapses to
+two distinct points, and the frame is free. `12000/15000/20000` at N=2001 is
+half of this — 12000 and 20000 are multiples of 2000, 15000 is not — and its
+`arc` of 1560000 is the polyline zigzagging the width of the window 2000 times.
+Any benchmark of this program that picks round numbers at the default sample
+count is likely measuring an aliased curve, so the sweep above uses the
+`legacy/` values and N=1048576 for anything it wants to conclude from.
+
+On the real display (1800x1800 px, 120 warm frames, vsync off so the work is
+visible rather than hidden behind the swap):
+
+| wheels | samples | kernel ms | drawn | draw ms | present ms |
+|---|---|---|---|---|---|
+| 5/7/12 | 2001 | 0.03 | 1993 | 0.68 | 0.39 |
+| 480/648/816 | 2001 | 0.03 | 2001 | 22.97 | 16.29 |
+| 480/648/816 | 1048576 | 18.27 | 802681 | 103.87 | 31.20 |
+| 159155/159156/159157 | 2001 | 0.04 | 1999 | 24.21 | 18.22 |
+
+Note the second row against the first: at the *default* sample count, with the
+default wheels, the draw alone is 23.0 ms — over the 16.7 ms a 60 Hz frame
+allows, before any of the curve maths. A per-segment and per-pixel model fitted
+to synthetic polylines on the same setup puts it at roughly **70-100 ns per
+segment plus 15-25 ns per device pixel**, and at N=2001 the pixels are 99% of
+it (2001 segments, 1.3M device pixels of arc).
+
 ### Drawing
 
 At N=1048576 with the software renderer the curve is 16 ms and the draw is
@@ -207,7 +335,45 @@ display with a warmed-up standalone probe:
   never thinned.
 
 For reference, `SDL_RenderLines` costs about 55 ns per segment at 2880x1800 on
-the Intel Iris Pro, once warm.
+the Intel Iris Pro, once warm; at 1800x1800 the synthetic numbers above put it
+at 70-100 ns per segment plus 15-25 ns per device pixel.
+
+**The thinning threshold was re-examined and left where it is.** Since the
+per-segment cost is real, raising `MIN_SEGMENT_PTS` from 0.5 was the obvious
+next move, and it does buy something: on the default wheels at N=1048576, on
+the real display, 0.5 -> 1.0 pt drops 802681 vertices to 607408 and the draw
+from 104.8 ms to 88.2 ms, 2.0 pt to 321934 vertices and 61.0 ms, 4.0 pt to
+183457 and 48.6 ms. The `arc` barely moves (808550 -> 808505 pt), so what is
+saved is all per-segment.
+
+What it costs is measured by rendering to BMP and diffing, and that turned out
+to be the fiddly part. The first attempt reported *zero* differing pixels for
+every threshold. That is a broken result rather than a good one — the images
+were uniformly black, so every pair compared equal — and the cause was never
+pinned down: the same readback in a later probe, before or after the present,
+with vsync on or off, returns the real frame in both setups. An obscured or
+not-yet-presented window on the real display is the plausible culprit. The
+lesson is the cheap one: count the lit pixels in each image before trusting a
+diff, because "no differences" and "no image" look the same in a diff.
+
+Read correctly, at scale 1 (900x900 px, default wheels, N=1048576, 0.5 pt
+against 1.0 pt): 1702 of 810000 pixels change, 0.21% of the canvas but 4.2% of
+the 40768 pixels the curve actually lights, and they are near-balanced — 781
+gained, 921 lost — so this is single-pixel flips along the edge of the stroke
+as the path shifts by a fraction of a pixel, not geometry going missing. At
+scale 2 it is the same 0.21% of the canvas. The one curve that does worse is
+5/7/12 at N=1048576, whose thinning at 0.5 pt is already at the floor: it drops
+25621 vertices to 12900 and loses 9432 of its 57000 lit pixels, 16% — there the
+curve genuinely thins.
+
+So: 1.3x on the draw of the densest curve, for 4% of the curve's pixels on the
+common ones and 16% on the ones that are already cheap, and no change at all to
+any sample count at or below 262144. Given that 105 ms becomes 88 ms and the
+frame is seven times over budget either way, that is not a trade worth making
+by default, and 0.5 pt — one device pixel on this machine's 2x display — stays.
+A sagitta test in place of the distance test would thin the straight runs much
+harder for the same deviation and is the change actually worth making if the
+draw ever needs to come down; it is a bigger change than this sweep justified.
 
 The status line reports `samples=N (drawing M)` so it is visible when the two
 differ.
