@@ -1,7 +1,7 @@
 # flowery
 
 
-[FLOWERY](./image.webp)
+![FLOWERY](./image.webp)
 
 
 Real-time, interactive spirograph renderer — **SDL3 port** of the classic
