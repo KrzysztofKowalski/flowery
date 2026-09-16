@@ -36,7 +36,7 @@ Three things fell out of this that the port has to match exactly:
    its aspect ratio and is centred in the canvas. That is what
    `build_screen_points()` reproduces, in window points instead of 777×777.
 3. **Colour**: gnuplot wrote `stroke='rgb(148,   0, 211)'`, hence the purple
-   in `main.c` and in the SVGs written by `s`.
+   in `main.cpp` and in the SVGs written by `s`.
 
 ## The sample files
 
@@ -80,11 +80,11 @@ gives 332px average against 0.05px with it.
 Held keys repeat, but deliberately not through the OS. SDL3 only generates
 repeat events while text input is active (`SDL_StartTextInput`), at the user's
 configured rate — and, more to the point, it would repeat *every* key, so a
-held `s` would write an SVG every few milliseconds. Instead `main.c` keeps its
+held `s` would write an SVG every few milliseconds. Instead `main.cpp` keeps its
 own table of held keys (`hold_key` / `release_key` / `key_repeats`) and
-re-fires only the keys that sweep a value: the arrows and `[` `]`, after
-300 ms and then every 40 ms. Everything that toggles or saves something is
-deliberately left out of that set. It is `SDL_EVENT_KEY_UP` that removes an
+re-fires only the keys that sweep a value: the arrows, `[` `]` and the stroke
+width on `,` `.`, after 300 ms and then every 40 ms. Everything that toggles or
+saves something is deliberately left out of that set. It is `SDL_EVENT_KEY_UP` that removes an
 entry, so the table is also cleared on `SDL_EVENT_WINDOW_FOCUS_LOST` — no
 key-up ever arrives once the window is unfocused and the key would otherwise
 repeat forever.
@@ -297,7 +297,10 @@ count is likely measuring an aliased curve, so the sweep above uses the
 `legacy/` values and N=1048576 for anything it wants to conclude from.
 
 On the real display (1800x1800 px, 120 warm frames, vsync off so the work is
-visible rather than hidden behind the swap):
+visible rather than hidden behind the swap). This table and the model under it
+are the **pre-fix** baseline — "Drawing in pixels" further down takes the `draw`
+column almost to nothing — but everything here about the kernel, the thinning
+and the shape of the sweep still stands:
 
 | wheels | samples | kernel ms | drawn | draw ms | present ms |
 |---|---|---|---|---|---|
@@ -312,6 +315,10 @@ allows, before any of the curve maths. A per-segment and per-pixel model fitted
 to synthetic polylines on the same setup puts it at roughly **70-100 ns per
 segment plus 15-25 ns per device pixel**, and at N=2001 the pixels are 99% of
 it (2001 segments, 1.3M device pixels of arc).
+
+That split — a small per-segment term and a large per-device-pixel one — is the
+diagnosis the fix was built on: remove the per-pixel term and the draw stops
+dominating the frame. See "Drawing in pixels".
 
 ### Drawing
 
@@ -378,6 +385,318 @@ draw ever needs to come down; it is a bigger change than this sweep justified.
 The status line reports `samples=N (drawing M)` so it is visible when the two
 differ.
 
+### Drawing in pixels
+
+The change that mattered. SDL3 only hands `SDL_RenderLines` to the driver's line
+API when the render scale is 1; at any other scale it takes
+`RenderLinesWithRectsF` -> `RenderLineBresenham` -> `RenderPointsWithRects`,
+which emits **one quad per line pixel** — four vertices and six indices each.
+The app drew in window points under `SDL_SetRenderScale(scale, scale)`, so on a
+2x display every frame went down that software path: 2001 segments and 1.3M
+device pixels of arc at the default sample count, one quad apiece. The renderer
+was hardware the whole time — `opengl`, Mesa on the Iris Pro. The lines were not.
+
+What changed:
+
+* `update_sizes()` leaves the renderer at scale 1.
+* `build_screen_points()` takes a `zoom` argument and multiplies the layout by
+  it, so the curve still lands on physical pixels. The screen passes the display
+  scale; `save_svg()` passes 1, which keeps the file in points and independent
+  of the display it happened to be written on.
+* `build_display_points()` takes its thinning threshold as a parameter, and the
+  screen passes one *device* pixel, because the points it is handed are device
+  pixels now.
+* `main()` sets `SDL_HINT_RENDER_LINE_METHOD=2` before creating the renderer,
+  and only if nothing has set it already, so the other methods stay reachable
+  for comparison. The hint is read at renderer-creation time, so it has to
+  precede `SDL_CreateRenderer()`.
+* `draw_overlays()` puts the renderer back at the display scale for the status
+  line and the help overlay. SDL's debug font is a fixed 8x8 **pixels**, so at
+  scale 1 it would come out half size on a 2x display. The curve wants a device
+  pixel per point; the font wants a point per pixel.
+
+Measured on the real display, vsync off, default 480/648/816 wheels, N=2001,
+fullscreen 1440x900 pts / 2880x1800 px:
+
+| | geom ms | draw ms | present ms | frame ms |
+|---|---|---|---|---|
+| before: points, scale 2, default method | 0.070 | 23.250 | 24.650 | 47.969 |
+| after: pixels, scale 1, method 2 | 0.059 | 0.156 | 1.630 | 1.845 |
+
+and the same pair in a 900x900-point window (1800x1800 px):
+
+| | geom ms | draw ms | present ms | frame ms |
+|---|---|---|---|---|
+| before | 0.056 | 22.084 | 95.752 | 117.892 |
+| after | 0.044 | 0.177 | 0.007 | 0.227 |
+
+The draw falls by ~150x, and the default-wheels frame goes from 47.97 ms to
+1.85 ms — under the 16.7 ms a 60 Hz frame allows, with the curve maths now a
+larger share of what is left than the drawing is. `present` moves around a lot
+between runs (it is the swap, and vsync is off); `draw` is the stable signal and
+the one the change is about.
+
+Method `2` is the driver's `GL_LINE_STRIP` and keeps the thin lines. Method `3`
+was measured at +29% ink and is documented as drawing "thicker diagonal lines",
+so it was the wrong default to take. Method `2` is documented as "occasionally
+missing line endpoints based on hardware driver quirks", which is why the hint
+is only a default that the environment can override.
+
+The residual is the per-segment term now, not the per-pixel one. But the table
+above is N=2001, where the thinning keeps every sample and there are only 2001
+of them; **the ~150x does not generalise upward**, and re-measuring the top of
+the range is the useful correction. At N=1048576 the frame was 161.6 ms with
+104.0 ms of draw before this change, and 100.4 ms with 73.8 ms of draw after it:
+1.6x, not 150x. The two paths cost different things, and only one of them
+saturates. The software path cost ~17 ns per device *pixel* of arc, and the ink
+a 2880x1800 frame can hold is bounded by the frame itself — 5.2 Mpx is ~88 ms,
+so it flattens out. The driver line path costs ~80 ns per *point drawn*, and
+there is no such ceiling: at N=1048576 there are 916k points, so it does not.
+That leaves this change as the one that makes the *default* sample count cheap,
+and the renderer choice below as the one that matters at six figures.
+
+### The renderer costs more than the drawing did
+
+SDL's line drawing is not one cost, it is one cost per backend. Same frame,
+same points, same everything, only `SDL_RENDER_DRIVER` changed, N=262144,
+fullscreen 1440x900 pts / 2880x1800 px, vsync off:
+
+| backend | draw ms | ns per drawn point |
+|---|---|---|
+| `opengl` | 21.361 | 80.6 |
+| `vulkan` | 2.045 | 7.8 |
+| `software` | 0.392 | (12.549 ms of it reappears in `present`) |
+| `opengl`, line method 3 (geometry) | 29.280 | 119.7, plus 25.8 ms of present |
+
+and it holds across the range: 9.9x at N=65536, 10.4x at N=262144, 10.2x at
+N=1048576 (73.8 ms against 5.9 ms). The default renderer on this machine was
+`opengl`, which is why six-figure sample counts were unusable.
+
+The two draw the same picture, which is the part that had to be checked before
+switching. Frames captured from both backends at N=262144 agree **pixel for
+pixel**: 99.6% mask overlap and the same ink to 0.1% (70096 px against 70119 px
+out of 5.18 Mpx). At N=2001 the masks overlap only 81% — that is SDL's
+documented "occasionally misses line endpoints based on hardware driver quirks"
+showing up on long chords — but the ink total still matches to 0.6% (145826
+against 145009) and the two frames cannot be told apart side by side.
+
+So `main()` asks for Vulkan by name, with SDL's own pick as the fallback, and an
+explicit `SDL_RENDER_DRIVER` still wins so every backend stays reachable for
+exactly this comparison. Both fallbacks were checked: with `SDL_VULKAN_LIBRARY`
+pointed at nothing it comes up `opengl`.
+
+Two caveats. Vulkan's `present` is the more expensive of the two (2.6-3.2 ms
+against 0.4-2.1 ms), so at the *default* sample count, where the draw is now
+0.025 ms, the total is slightly worse — 3.4 ms against 2.4 ms. Both are far
+inside the 16.7 ms a frame allows, so nothing is visible, but it is the reason
+this is a switch to make for the top of the range and not a free win at the
+bottom. And `present` was the noisiest number in the whole sweep: one N=1048576
+run reported 15.9 ms of it and a 49.5 ms frame, while three repeats gave 33.8,
+34.0 and 34.4 ms. Nothing here is GPU-bound, either — 1-3 ms of `present`
+against 800k vertices says the work is in SDL's vertex handling, not the
+rasteriser.
+
+The third caveat is the one to read before trusting this on another machine.
+Mesa says so on startup, unprompted:
+
+```
+MESA-INTEL: warning: Haswell Vulkan support is incomplete
+```
+
+This is a Gen7.5 part and Mesa's Vulkan driver for it is not finished. The
+frames above were verified pixel for pixel against the GL ones on *this* driver,
+so it renders correctly here today, and `SDL_RENDER_DRIVER=opengl` is the way
+back — but the fallback in `main()` only catches a Vulkan renderer that fails to
+*create*, not one that creates and draws wrongly. On a different Haswell, or
+after a Mesa change, the GL path is the trustworthy one, and the comparison to
+re-run is the one in this section: same wheels, same N, capture both, compare
+ink.
+
+### The rainbow hue runs
+
+Rainbow mode divided once per drawn point:
+
+```c
+const int q = (int)((long long)a->didx[s + 1] * RAINBOW_STEPS / n);
+while (e < m - 2 && (int)((long long)a->didx[e + 2] * RAINBOW_STEPS / n) == q)
+```
+
+A 64-bit integer division is about 40 cycles and `m` runs to six figures.
+Measured at N=262144 on Vulkan: `draw` is 2.045 ms plain and 5.826 ms in
+rainbow. Of the 3.8 ms difference, 255 extra draw calls account for ~0.1 ms, so
+~3.7 ms — 14 ns a point, 42 cycles, exactly a division — was this.
+
+`didx` is monotone, so the bucket is monotone, and the end of a run is the first
+sample whose bucket is past `q`, which is `ceil((q+1)*n/RAINBOW_STEPS)`. That is
+one division per *run* (at most 256 of them) instead of one per point. Measured:
+5.826 ms down to 2.321 ms, so rainbow now costs 0.28 ms over plain rather than
+3.8 ms, and at N=1048576 it is inside the noise of the plain draw.
+
+The two loops pick exactly the same runs, which is not something to take on
+trust — the rewrite changes where the boundary comes from. It was checked
+against the original on 3640 cases: `n` from 2 to 2097152 including values that
+are not multiples of 256, and `didx` dense, thinned and degenerate, with the
+boundary jittered off the exact multiples of `n/256` because that is where an
+off-by-one would live. 0 mismatches.
+
+### The stroke width
+
+SDL 3.4.16 has no line width. There is no `SDL_SetRenderLineWidth` in any SDL3
+header — grepping `/usr/include/SDL3/*.h` finds `glLineWidth` in the GL headers
+and nothing else — so a stroke can only be drawn by the app. The API that could
+do it properly is `SDL_RenderGeometry`, and the closest measured stand-in for
+that work (line method 3, which builds the outline and hands it over, exactly
+what a geometric stroke is) cost 29.28 ms of draw at N=262144 against 2.05 ms
+for the driver line path on Vulkan — 119.7 ns a point against 7.8, about 15x the
+thin line for a 5 px stroke. So a stroke is **k offset copies of the thin
+line**, pushed along the point's normal: `w` passes down the same polyline.
+
+Whole pixels, not fractions. SDL's line rasteriser snaps to the pixel grid, so
+two copies half a pixel apart land on the same pixels and the stroke comes out
+uneven. The offsets go outwards from the centre — 0, −1, +1, −2, +2 — which
+makes a stroke of width `w` symmetric about the curve, and makes `w=1` exactly
+the single call it always was.
+
+Measured offscreen at 900x900, scale 1.00, vsync off, on the default
+480/648/816 wheels. `draw` and `thin` are the trustworthy columns; `total` is
+not, and neither is `present` (see "Measuring it"):
+
+| N=262144, 262144 points | thin ms | draw ms | ns/pt |
+|---|---|---|---|
+| `w=1` (default) | 0.68 | 1.83 | 7.0 |
+| `w=3` | 2.55 | 6.49 | 24.8 |
+| `w=5` | 2.53 | 11.20 | 42.7 |
+| `w=8` | 2.62 | 19.11 | 72.9 |
+| `w=5 taper` | 3.51 | 5.31 | 20.3 |
+| `w=5 speed` | 7.52 | 7.26 | 27.7 |
+
+and at N=1048576, where the thinning leaves 802681 points to draw:
+
+| N=1048576, 802681 points | thin ms | draw ms | ns/pt |
+|---|---|---|---|
+| `w=1` | 2.32 | 5.70 | 7.1 |
+| `w=3` | 8.14 | 21.42 | 26.7 |
+| `w=5` | 8.20 | 36.65 | 45.7 |
+| `w=5 taper` | 10.88 | 17.25 | 21.5 |
+| `w=5 speed` | 23.01 | 20.54 | 25.6 |
+
+The law is **~9.5 ns per drawn point for each extra pixel of width**, over a
+base of ~7 ns: 9.2 ns at N=262144 and 9.6 at N=1048576, so it does not depend
+on how densely the samples sit. A 5 px stroke is about 6.4x a thin line, and it
+is the drawing, not the geometry, that pays — `thin` is flat in the width
+(+1.85 ms at N=262144 whatever `w` is, +5.9 at N=1048576) because building the
+normals and the width table does not care how wide the stroke ends up.
+
+Offscreen reports scale 1.00 and so flatters this path; the `w=1` base of
+7.0 ns a point is the same figure the Vulkan renderer gives on the display
+(7.8), and nowhere near `opengl`'s 80.6, so these runs are on the renderer the
+app actually picks. It also means these are **device** pixels: at scale 2 a
+5 px stroke is 2.5 points on screen, half the visual width it has here. A
+stroke measurement on the real display at scale 2 has not been made.
+
+**How the width varies.** `v` cycles flat / taper / speed, and `,` `.` are the
+width (1-16 device pixels, held they repeat like the arrows). Both default to
+off: `w=1 flat` is the old behaviour, and at `w=1` none of the stroke geometry
+is built at all — `build_normals`, `build_widths` and the `wid`/`nrm`/`thk`
+buffers are never touched — so every number earlier in these notes still
+describes the default.
+
+`taper` ramps with `didx`, cheap and obvious. `speed` is the interesting one:
+width follows how fast the curve is travelling, and the thing to get right is
+that it follows the point's **rank** in the speed distribution rather than the
+speed itself. A spirograph is a sum of three rotating vectors, so its speed
+spans orders of magnitude, and any direct mapping puts nearly the whole curve
+at one end of the width range — measured, a linear map left the stroke at 44%
+of the ink the same mean width should give. Ranking against a 128-bin histogram
+in log space fixes it without knowing what the distribution is, on this curve
+or the next one: 71% of the ink. The log is `fast_log2`, the exponent shifted
+out of the float and the mantissa standing in for the fraction — monotone,
+about a tenth of a bin, and it replaced an honest `log()` that cost ~50 cycles
+a point, 20 ms at a million points, four times the drawing it was in aid of.
+Speed and the normals are also built in one pass now rather than two, because
+each pass wanted its own `sqrt`.
+
+**Verification.** The default path was checked to emit the *identical* sequence
+of `(colour, SDL_RenderLines(ptr, count))` calls as the code before it on 3850
+cases — and that sequence is the only way `draw_curve` can affect the image, so
+identical calls mean identical pixels. The thick path was checked on the same
+3850 cases to tile the polyline exactly once: every sample covered, none twice,
+no run left short. `./test.sh` is unchanged at 594/614 with a worst 0.043 px,
+which it should be, since the SVG is not touched. And the strokes nest: `w=5`
+covers `w=3` covers `w=1`, with 15 pixels outside `w=5` out of ~268k of `w=3`
+ink, so "width" means what it says.
+
+**What it does not do.** `save_svg()` still writes `stroke-width="1"`. That is
+deliberate — the SVG is the artefact compared against gnuplot and the oracle
+parses its polyline — but it does mean the saved file does not carry the stroke,
+and if it should, that is a small change.
+
+### Measuring it
+
+The app carries its own harness, because the numbers above are not reproducible
+by eye and the interesting ones are all at sample counts nobody types in by
+hand.
+
+* `FLOWERY_BENCH=<n>` holds the curve still, forces it dirty every frame (the
+  worst case — an idle frame does no curve maths at all, so there is nothing to
+  compare), turns vsync off, drops the help overlay, and quits after `n` counted
+  frames. The first 30 frames are drawn but not timed: the compositor is still
+  resizing the window and the first draw compiles shaders.
+* `FLOWERY_PROFILE=1` just prints the same line every 60 frames while the app
+  runs normally.
+* `FLOWERY_BENCH_FULLSCREEN=1` is not a convenience. Hyprland resizes the
+  window underneath the app — the runs above landed on 410x427 points, then
+  401x418, and one on 1440x900 — and the thinning threshold sits close enough to
+  the sample spacing that a 2% smaller window moves `drawn` by 7%. Only the
+  fullscreen size is stable enough to compare two builds.
+* `FLOWERY_BENCH_BMP=<file>` leaves the last frame on disk, which is how the two
+  backends were compared pixel by pixel. `FLOWERY_RAINBOW=1` too.
+* A benchmark on the display is listening to the keyboard while it runs. This is
+  not theoretical: a `,` typed during a stroke-width run moved the width from 5
+  to 1 half way through the measurement, and the run reported the mean of two
+  different strokes. Bench mode now logs the key (`bench: key , during a
+  benchmark run`) so a disturbed run says so itself. The stroke numbers above
+  are offscreen for that reason — no window, no keyboard, deterministic
+  geometry. Offscreen cannot say anything about the scale-2 path, but for
+  comparing one width against another it is the better instrument.
+
+Each line reports kernel, layout (bbox + mapping), thinning, draw, HUD and
+present separately, plus `samples` and `drawn`, because the ratio between those
+two is what says whether the thinning is doing anything — and at 480/648/816 it
+mostly is not: at N=262144 it removes 7% and at N=1048576 it removes 24%,
+because the curve's arc is genuinely ~800k device pixels long. There is no
+cheap "render fewer samples" win here: the sample spacing at these counts is
+already about one pixel, so dropping samples to make the drawing cheaper would
+make the curve visibly coarser. That was worth measuring rather than assuming —
+it is the obvious idea and it does not hold.
+
+### What is left
+
+At N=1048576 on Vulkan the frame is 33.8 ms and it splits 18.5 kernel, 3.9
+layout, 2.7 thin, 5.9 draw, 2.7 present — so the kernel is now well over half of
+it, and it is the one term that has had no attention since the AVX2 port.
+
+It is not obviously broken. `flowery_points` runs 159 instructions per four
+samples, 60 of them FMA, with **zero register spills**, and the clock on this
+machine measures 2.28 GHz (a dependent-FMA chain, 5 cycles an FMA), which makes
+17.6 ns a sample about 40 cycles — an IPC near 1.0. The port-limited floor for
+that mix is roughly 52 cycles per iteration, so there is up to ~3x of theoretical
+headroom, but it is all in the quadrant logic: `vblendvpd` (two uops), the
+`vpmovsxdq` masks and the port-1-only `vroundpd`/`vcvttpd2dq` between them cost
+more than the two polynomials do. Getting at it means restructuring that logic,
+and the arithmetic in `sincos4` is deliberately the same operations in the same
+order as the scalar path — that invariance is what the 0.043 px agreement with
+gnuplot rests on, so it is not a change to make for a 2x on a sample count the
+app rarely sits at.
+
+The cheaper structural items are the three O(N) passes: the bounding box reads
+back the 16 MB the kernel just wrote, and folding it into the kernel loop would
+remove one of them for perhaps 1.5 ms at N=1048576. Beyond that the lever is
+threads — the kernel is per-sample independent, so a persistent pool over index
+ranges would be bit-exact and is the only thing here that could plausibly reach
+the 16.7 ms frame at a million samples. It is also a different kind of change
+from everything above, and this is a laptop that is being used while it runs.
+
 ### Flags
 
 `-O3 -march=native -fno-math-errno -fno-trapping-math`, and `-std=c++20`.
@@ -401,10 +720,15 @@ with HIGH_PIXEL_DENSITY      window 710x427 pts | renderer 1420x854 px | scale 2
 ```
 
 Without the flag the compositor stretches a 1× image over a 2× screen, so
-everything the app draws is soft. With it, and with drawing done in points
-under `SDL_SetRenderScale()`, the curve is laid out identically but rasterised
-at the full native resolution. `SDL_GetWindowDisplayScale()` is the source of
-the scale (SDL 3.2+).
+everything the app draws is soft. With it, the curve is laid out identically but
+rasterised at the full native resolution. `SDL_GetWindowDisplayScale()` is the
+source of the scale (SDL 3.2+).
+
+The scale is applied to the **layout**, not to the renderer:
+`build_screen_points()` scales the coordinates into device pixels and the
+renderer stays at 1, because a scaled renderer costs SDL its driver line path
+and roughly 150x on the draw. The HUD is the exception and is drawn in points.
+See "Drawing in pixels".
 
 Fullscreen reaches the panel's native resolution too — same window, `f`
 pressed, sizes logged per frame:
