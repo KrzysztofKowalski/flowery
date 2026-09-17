@@ -13,9 +13,10 @@
  *   arrows       adjust wheel n (Up/Down) or phase s (Left/Right)
  *   [ ]          adjust wheel radius a
  *   + -          halve / double the number of samples
- *   space        toggle phase animation (rotating wheels)
+ *   space        toggle phase animation (rotating wheels, breathing radii)
  *   c            toggle rainbow colouring
  *   r            randomise the wheels
+ *   z  x         step back / forward through the randomisations
  *   , .          stroke width, thinner / thicker
  *   < >          waves along the curve, fewer / more (wave mode)
  *   v            cycle the stroke variation: flat / taper / speed / wave
@@ -25,10 +26,11 @@
  *   h            toggle help overlay
  *   Esc / q      quit
  *
- * Holding one of the adjusting keys (arrows, [ ]) repeats it: after a short
- * delay the key fires again a few dozen times a second, so n, s and a can be
- * swept without hammering the keyboard. The keys that toggle or save
- * something do not repeat.
+ * Holding one of the adjusting keys (arrows, [ ], comma/period and z/x)
+ * repeats it: after a short delay the key fires again a few dozen times a
+ * second, so n, s, a, the stroke width and the history can be swept without
+ * hammering the keyboard. The keys that toggle or save something do not
+ * repeat.
  *
  * The curve is recomputed only when something about it actually changed, and
  * the polyline handed to the renderer is thinned to the resolution of the
@@ -207,6 +209,21 @@ load_gl(void)
 #define REPEAT_RATE_MS  40
 #define MAX_HELD        8
 
+/* The animation's radius breath. The range is the one randomize_wheels()
+ * draws from, so what the sine reaches is what `r` could have picked.
+ * ANIM_RADIUS_RATE is in turns per second and sits deliberately below every
+ * wheel's phase rotation (0.008 * (k+1) turns/s), so the figure breathes
+ * slower than it turns. The three radii are a third of a turn apart, which
+ * also makes their sum constant - the figure keeps its size while it changes
+ * shape, instead of the whole thing pulsing. */
+#define ANIM_RADIUS_RATE 0.004
+#define ANIM_RADIUS_MID  1.375      /* (0.75 + 2) / 2 */
+#define ANIM_RADIUS_AMP  0.625      /* (2 - 0.75) / 2 */
+
+/* Snapshots the randomisation history keeps. Full history drops the oldest
+ * rather than refusing the new one, so this is how far back `z` can reach. */
+#define MAX_HIST 64
+
 /* How far apart, in window points, two drawn vertices have to be to be worth
  * drawing separately. Segments shorter than this land on the same pixel (or
  * the next one), so at a million samples the curve is thinned by an order of
@@ -305,6 +322,16 @@ typedef struct {
     Uint64      next;   /* when this key should fire again */
 } HeldKey;
 
+/* A snapshot of everything `z` and `x` move between: the wheels and the way
+ * they are drawn, so stepping back through the randomisations also undoes a
+ * width or colour change made after one. Which wheel is selected is not part
+ * of the picture and is not in here. */
+typedef struct {
+    FloweryParams p;
+    int  width, widthMode, waveCount;
+    bool rainbow;
+} HistState;
+
 typedef struct {
     SDL_Window   *window;
     SDL_Renderer *renderer;
@@ -324,6 +351,18 @@ typedef struct {
     HeldKey       held[MAX_HELD];
     int           nheld;
     Uint64        lastTicks;
+
+    /* The animation clock, in seconds. It is advanced only while animating,
+     * so pausing freezes the radius breath and resuming carries it on from
+     * where it stopped rather than jumping to where it would have got to. */
+    double        animT;
+
+    /* The randomisation history. `histPos` indexes the entry on screen, and
+     * the live state normally equals hist[histPos] because hist_touch() moves
+     * that snapshot along with every later edit. */
+    HistState     hist[MAX_HIST];
+    int           histN;
+    int           histPos;
 
     /* Frame timing, in milliseconds. `seen` counts every frame the loop has
      * run, `frames` only those past the warm-up that went into the sums. */
@@ -918,6 +957,66 @@ set_default_wheels(FloweryParams *p)
     p->n[0] = 480; p->n[1] = 648; p->n[2] = 816;
     p->a[0] = p->a[1] = p->a[2] = 1.0;
     p->s[0] = p->s[1] = p->s[2] = 0.0;
+}
+
+/* The live state into a snapshot. These five fields are everything `z` puts
+ * back; the rest of an App is either derived from them (the curve, the
+ * buffers, the vertex data) or not part of the picture (`sel`). */
+static void
+hist_capture(const App *a, HistState *h)
+{
+    h->p = a->p;
+    h->width = a->width;
+    h->widthMode = a->widthMode;
+    h->waveCount = a->waveCount;
+    h->rainbow = a->rainbow;
+}
+
+/* Push the live state as the newest snapshot and leave the cursor on it.
+ * Full history drops the oldest rather than refusing the new one: the recent
+ * randomisations are the ones worth stepping back through. */
+static void
+hist_push(App *a)
+{
+    if (a->histN == MAX_HIST)
+        SDL_memmove(a->hist, a->hist + 1, sizeof(HistState) * (MAX_HIST - 1));
+    else
+        ++a->histN;
+    hist_capture(a, &a->hist[a->histN - 1]);
+    a->histPos = a->histN - 1;
+}
+
+/* The live state changed under the cursor, so the snapshot it stands on moves
+ * with it: `x` comes back to the change, not to the state the roll left. */
+static void
+hist_touch(App *a)
+{
+    if (a->histN)
+        hist_capture(a, &a->hist[a->histPos]);
+}
+
+static void
+hist_restore(App *a, int pos)
+{
+    const HistState *h;
+
+    if (pos < 0 || pos >= a->histN) return;
+    a->histPos = pos;
+    h = &a->hist[pos];
+    a->p = h->p;
+    a->width = h->width;
+    a->widthMode = h->widthMode;
+    a->waveCount = h->waveCount;
+    a->rainbow = h->rainbow;
+
+    /* The samples may have come back with the state, and the buffers are
+     * grown from a->p.samples in update_geometry(), so everything downstream
+     * of them is stale. */
+    a->dirtyCurve = true;
+    a->dirtyLayout = true;
+    a->strokeDirty = true;
+    a->rbqDirty = true;
+    a->vertsDirty = true;
 }
 
 /* --------------------------------------------------------------- saving */
@@ -1543,10 +1642,10 @@ render_frame(App *a)
 /* ------------------------------------------------------------- text/HUD */
 
 static void
-draw_debug_text(const App *a, const char *text)
+draw_debug_text(const App *a, float y, const char *text)
 {
     SDL_SetRenderDrawColor(a->renderer, 255, 255, 255, 255);
-    SDL_RenderDebugTextFormat(a->renderer, 12.0f, 12.0f, "%s", text);
+    SDL_RenderDebugTextFormat(a->renderer, 12.0f, y, "%s", text);
 }
 
 /* The help overlay, in one place because both drawing paths show it. */
@@ -1556,12 +1655,13 @@ static const char *const help_lines[] = {
     "Left/Right   phase offset s",
     "[  ]         wheel radius a",
     "+  -         samples (halve/double)",
-    "space        rotate wheels (animate)",
+    "space        animate wheels and radii",
     ",  .         stroke width (thinner/thicker)",
     "<  >         waves along the curve (fewer/more)",
     "v            stroke variation (flat/taper/speed/wave)",
     "c            rainbow colour",
     "r            randomise",
+    "z  x         random history (back/forward)",
     "f            fullscreen",
     "s            save SVG",
     "b            save BMP",
@@ -1583,8 +1683,12 @@ draw_help(const App *a)
 
 /* ----------------------------------------------------------- status line */
 
+/* Two lines rather than one: the single line already ran past the right edge
+ * of a 900-point window - the debug font is 8 points wide and the line was
+ * about 127 characters - and the history position would push it further out.
+ * The first is the shape, the second how it is drawn. */
 static void
-format_status(const App *a, char *buf, size_t bufsz)
+format_status(const App *a, char *line1, size_t n1, char *line2, size_t n2)
 {
     /* The wave count only means anything in the wave mode, so it is only
      * shown there rather than sitting in the line as a number that does
@@ -1598,17 +1702,18 @@ format_status(const App *a, char *buf, size_t bufsz)
         snprintf(stroke, sizeof stroke, "w=%d %s",
                  a->width, width_mode_names[a->widthMode]);
 
-    snprintf(buf, bufsz,
-             "wheel[%d] n=%3.0f n=%3.0f n=%3.0f   a=(%.2f %.2f %.2f)  "
-             "s=(%.3f %.3f %.3f)   samples=%d (drawing %d)%s   "
-             "%s   %dx%d@%.0fx",
+    snprintf(line1, n1,
+             "wheel %d  n=%.0f/%.0f/%.0f  a=%.2f/%.2f/%.2f  s=%.3f/%.3f/%.3f  "
+             "N=%d/%d",
              a->sel,
              a->p.n[0], a->p.n[1], a->p.n[2],
              a->p.a[0], a->p.a[1], a->p.a[2],
              a->p.s[0], a->p.s[1], a->p.s[2],
-             a->p.samples, a->ndisp,
-             a->rainbow ? "  rainbow" : "",
-             stroke,
+             a->p.samples, a->ndisp);
+
+    snprintf(line2, n2, "%s%s  hist %d/%d  %dx%d@%.0fx",
+             stroke, a->rainbow ? "  rainbow" : "",
+             a->histPos + 1, a->histN,
              a->winW, a->winH, (double)a->scale);
 }
 
@@ -1622,18 +1727,19 @@ format_status(const App *a, char *buf, size_t bufsz)
 static void
 draw_overlays(App *a)
 {
-    char status[320];
+    char line1[320], line2[320];
     int ntext, k = 0;
 
-    format_status(a, status, sizeof status);
+    format_status(a, line1, sizeof line1, line2, sizeof line2);
 
     if (a->rawgl) {
-        ntext = hud_text_quads(status);
+        ntext = hud_text_quads(line1) + hud_text_quads(line2);
         for (size_t i = 0; a->help && i < HELP_N; ++i)
             ntext += hud_text_quads(help_lines[i]);
         if (!ensure_hud_verts(a, ntext)) return;
 
-        hud_text(a, &k, 12.0f, 12.0f, status);
+        hud_text(a, &k, 12.0f, 12.0f, line1);
+        hud_text(a, &k, 12.0f, 24.0f, line2);
         if (a->help) {
             float y = 40.0f;
             for (size_t i = 0; i < HELP_N; ++i) {
@@ -1661,7 +1767,8 @@ draw_overlays(App *a)
     }
 
     SDL_SetRenderScale(a->renderer, a->scale, a->scale);
-    draw_debug_text(a, status);
+    draw_debug_text(a, 12.0f, line1);
+    draw_debug_text(a, 24.0f, line2);
     if (a->help)
         draw_help(a);
     SDL_SetRenderScale(a->renderer, 1.0f, 1.0f);
@@ -1710,6 +1817,8 @@ key_repeats(SDL_Keycode key)
     case SDLK_RIGHTBRACKET:
     case SDLK_COMMA:
     case SDLK_PERIOD:
+    case SDLK_Z:
+    case SDLK_X:
         return true;
     default:
         return false;
@@ -1742,6 +1851,7 @@ static void
 handle_key(App *a, const SDL_KeyboardEvent *ke)
 {
     bool shifted = (ke->mod & SDL_KMOD_SHIFT) != 0;
+    bool changed = false;       /* the keys that touch the recorded state */
     int k = a->sel;
 
     /* A benchmark is driven by the environment, so any key arriving during one
@@ -1762,39 +1872,47 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
     case SDLK_UP:
         a->p.n[k] += shifted ? 10.0 : 1.0;
         a->dirtyCurve = true;
+        changed = true;
         break;
     case SDLK_DOWN:
         a->p.n[k] -= shifted ? 10.0 : 1.0;
         a->dirtyCurve = true;
+        changed = true;
         break;
     case SDLK_LEFT:
         a->p.s[k] -= shifted ? 0.05 : 0.01;
         a->p.s[k] = fmod(a->p.s[k] + 1.0, 1.0);
         a->dirtyCurve = true;
+        changed = true;
         break;
     case SDLK_RIGHT:
         a->p.s[k] = fmod(a->p.s[k] + (shifted ? 0.05 : 0.01), 1.0);
         a->dirtyCurve = true;
+        changed = true;
         break;
 
     case SDLK_LEFTBRACKET:
         a->p.a[k] -= shifted ? 0.5 : 0.1;
         if (a->p.a[k] < 0.0) a->p.a[k] = 0.0;
         a->dirtyCurve = true;
+        changed = true;
         break;
     case SDLK_RIGHTBRACKET:
         a->p.a[k] += shifted ? 0.5 : 0.1;
         a->dirtyCurve = true;
+        changed = true;
         break;
 
     case SDLK_PLUS:
     case SDLK_EQUALS:
         a->p.samples = (int)fmin((double)a->p.samples * 2.0, 1048576.0);
         a->dirtyCurve = true;
+        changed = true;
         break;
     case SDLK_MINUS:
         a->p.samples = (int)fmax((double)a->p.samples / 2.0, 32.0);
         a->dirtyCurve = true;
+        changed = true;
         break;
 
     case SDLK_F:
@@ -1807,10 +1925,19 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
     case SDLK_C:
         a->rainbow = !a->rainbow;
         a->vertsDirty = true;       /* the colour is on the vertices now */
+        changed = true;
         break;
     case SDLK_R:
+        a->histN = a->histPos + 1;  /* rolling from the past drops what is ahead */
         randomize_wheels(&a->p);
+        hist_push(a);               /* the roll it just made becomes the head */
         a->dirtyCurve = true;
+        break;
+    case SDLK_Z:
+        if (a->histPos > 0) hist_restore(a, a->histPos - 1);
+        break;
+    case SDLK_X:
+        if (a->histPos + 1 < a->histN) hist_restore(a, a->histPos + 1);
         break;
     case SDLK_S:
         {
@@ -1848,10 +1975,12 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
             if (a->waveCount > 1) {
                 --a->waveCount;
                 a->strokeDirty = true;
+                changed = true;
             }
         } else if (a->width > 1) {
             --a->width;
             a->strokeDirty = true;
+            changed = true;
         }
         break;
     case SDLK_PERIOD:
@@ -1859,10 +1988,12 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
             if (a->waveCount < MAX_WAVES) {
                 ++a->waveCount;
                 a->strokeDirty = true;
+                changed = true;
             }
         } else if (a->width < MAX_WIDTH) {
             ++a->width;
             a->strokeDirty = true;
+            changed = true;
         }
         break;
     case SDLK_V:
@@ -1870,10 +2001,16 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
         if (a->width <= 1)          /* a variation of a 1-pixel line is 1 pixel */
             a->width = DEFAULT_VARIED_WIDTH;
         a->strokeDirty = true;
+        changed = true;
         break;
     default:
         break;
     }
+
+    /* The edit above changed the state the cursor is standing on, so the
+     * snapshot moves with it rather than being left as the roll found it. */
+    if (changed)
+        hist_touch(a);
 }
 
 /* ------------------------------------------------------------------- main */
@@ -2067,6 +2204,10 @@ main(int argc, char *argv[])
         app.vsync = SDL_SetRenderVSync(app.renderer, app.benchFrames > 0 ? 0 : 1);
     SDL_Log("vsync: %s", app.vsync ? "on" : "unavailable");
 
+    /* The history starts on the state the app opened in, so the first `r` is
+     * only one step away from what was there before it. */
+    hist_push(&app);
+
     while (1) {
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
@@ -2112,10 +2253,19 @@ main(int argc, char *argv[])
             }
         }
 
+        /* The radii ride a sine between the two ends of randomize_wheels()'s
+         * range. It overwrites a[k] and stays where it is when the animation
+         * is switched off - there is deliberately no undo for it - so pressing
+         * `r` while paused and resuming snaps the sine back onto its own
+         * value, which is expected. */
         if (app.animate) {
             double dt = (double)(now - app.lastTicks) / 1000.0;
-            for (int k = 0; k < WHEELS; ++k)
+            app.animT += dt;
+            for (int k = 0; k < WHEELS; ++k) {
+                const double ph = ANIM_RADIUS_RATE * app.animT + (double)k / WHEELS;
                 app.p.s[k] = fmod(app.p.s[k] + 0.008 * (k + 1) * dt, 1.0);
+                app.p.a[k] = ANIM_RADIUS_MID + ANIM_RADIUS_AMP * sin(WAVE_TAU * ph);
+            }
             app.dirtyCurve = true;
         }
         /* A benchmark wants the worst case every frame, not the idle one. */

@@ -1013,9 +1013,11 @@ immediately measures still sees the old size.
 
 ## Paused work
 
-The tree is dirty on `master` and nothing is committed: `src/main.cpp`,
-`src/flowery.cpp`, `src/flowery.h`, `tests/test_flowery.cpp`, `NOTES.md`,
-`run.sh`. Two threads are open in it.
+`master` now holds `d7b2d81` ("m", 2026-09-17 16:26), which the user committed
+from their own terminal: the raw-GL round, the bounding box fold below, and the
+documentation of both. Still uncommitted are `src/main.cpp` and this file - the
+radius animation and the random history - which have never been compiled,
+because building is banned as of 2026-09-17.
 
 ### The bounding box moved into the kernel — built, not confirmed
 
@@ -1069,25 +1071,63 @@ binary 1.87-1.99 ms for the same phase, because the GL path does work there the
 lines path does not. Comparing phase by phase across `FLOWERY_DRAW` is comparing
 different work, so only compare like with like.
 
-### The next feature — decided, not written
+### The animation and the random history — written, not compiled
 
-Two additions to `src/main.cpp`, with the choices already made:
+Both additions are now in `src/main.cpp`, and nothing else was touched.
+**Nothing here has been compiled or run** - the build ban means the whole of
+this is source that has been read, not a result. What follows is what the code
+says, which is all there is to go on until it is built.
 
-1. **The animation moves the wheel radii too.** `space` today only advances
-   `s[k]`. `a[k]` should ride a sine through the **full 0.75..2 range**
-   `randomize_wheels()` uses — centre 1.375, amplitude 0.625 — with a per-wheel
-   phase offset (`k/3`) and a frequency slower than the phase rotation. Without
-   the offset the three radii swell in lockstep and it reads as the whole figure
-   pulsing rather than the wheels breathing. It **overwrites** `a[k]` and stays
-   wherever it is when the animation stops: that is the chosen behaviour, so
-   there is deliberately no undo for the animation itself.
-2. **A history of the randomisations.** `r` snapshots the state before rolling;
-   `z` steps back through the snapshots, `x` steps forward. The snapshot is the
-   **full state**, not just the wheels — wheels plus stroke width, stroke mode,
-   the rainbow flag and the sample count — so `z` also undoes a width or colour
-   change made after a roll. A fresh `r` while stepped back truncates what was
-   in front of it, and the HUD should show the position (`hist 3/7`). That line
-   is already long enough to fall off the right edge at 900x900 (`w=7 wave/12`),
-   so it needs laying out to fit rather than appending to.
+**The animation breathes the radii.** `space` still advances the phases, and
+now also puts `a[k]` on a sine through the same 0.75..2 range
+`randomize_wheels()` draws from: centre `ANIM_RADIUS_MID` 1.375, amplitude
+`ANIM_RADIUS_AMP` 0.625, one rate for all three wheels (`ANIM_RADIUS_RATE`
+0.004 turns/s), and a per-wheel offset of `k/3`. The offset is what makes the
+three radii sit a third of a turn apart, and because they share a frequency
+their sines sum to exactly zero - so the figure holds its size while its shape
+changes. That is the "wheels breathing" reading rather than the whole figure
+pulsing, and it is a property of the chosen numbers, not of the code. The rate
+is below every wheel's phase rotation (0.008*(k+1) turns/s), which is what was
+decided when the feature was specified; a full breath takes 250 s, so it is one
+constant to tune by eye. The sine overwrites `a[k]` and stays wherever it is
+when the animation is switched off, as chosen: there is deliberately no undo
+for the animation itself, though a `z` back past an entry does take the radii
+with it, since `a` is in the snapshot like everything else - while the
+animation is stopped. With `space` on there is nothing for it to take them
+back to: the sine owns `a[k]` and rewrites it on the next frame, so a `z` shows
+the roll's `n` and `s` and the radii carry on breathing. An edit made while
+animating likewise records the sine's instantaneous radii into the entry under
+the cursor, because that is what the live state holds. The radii are only
+remembered as state at all while the animation is off. The animation clock
+runs only while animating, so pausing freezes the breath and resuming carries
+it on rather than jumping.
 
-Free keys at the time of writing: `z x u i o t w y a d e g j k l m n p`.
+**The randomisations are recorded.** `r` rolls and records the state it rolled;
+`z` and `x` step back and forward through the recorded states; the HUD shows
+the position as `hist n/m`. The snapshot is the full state - the wheels plus
+stroke width, stroke mode, wave count, rainbow flag and sample count - so
+stepping back past a roll also undoes a width or colour change made after it,
+and stepping forward returns to that change rather than to the state the roll
+left. `sel` is not in the snapshot; which wheel is selected is not part of the
+picture. A fresh `r` while stepped back drops everything ahead of the cursor,
+and the list is seeded with the startup state, so `z` from the first roll lands
+on the state the app opened in. It holds 64 states - the startup seed and then
+63 rolls - and after that drops the oldest, which is where `z` stops reaching.
+Both keys auto-repeat along with the other stepping keys.
+
+**The status line became two lines.** It already ran to about 127 characters
+against the 112 that fit a 900-point window at the 8-point debug font, so
+`hist n/m` could not be appended to it: line 1 carries the shape (n, a, s, N)
+and line 2 the way it is drawn (stroke, rainbow, hist, window and scale). Both
+drawing paths draw both lines, at y=12 and y=24, and the help overlay still
+starts at y=40.
+
+**What this leaves unsettled.** Everything that needs a build: that it
+compiles, that the two keys do what the paragraphs above say, and that the
+two-line HUD reads well on the display rather than merely fitting. One thing it
+does not disturb is the oracle: the test binary is
+`tests/test_flowery.cpp src/flowery.cpp` and does not contain `main.cpp`, so
+none of this reaches it - the still-unconfirmed 594/614 for the bbox fold is
+neither helped nor hurt by this part.
+
+Free keys now (at the time of writing): `u i o t w y a d e g j k l m n p`.
