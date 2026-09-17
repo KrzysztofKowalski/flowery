@@ -17,6 +17,7 @@
 #include "flowery.h"
 
 #include <cmath>
+#include <limits>
 
 #if defined(__AVX2__) && defined(__FMA__)
 #  include <immintrin.h>
@@ -155,13 +156,24 @@ inline void sincos4(__m256d x, __m256d *sinp, __m256d *cosp)
 } /* namespace */
 
 void
-flowery_points(const FloweryParams *p, double *xs, double *ys)
+flowery_points(const FloweryParams *p, double *xs, double *ys, double *bbox)
 {
     const int n = p->samples > 0 ? p->samples : 1;
     /* gnuplot `set samples N` evaluates t = i/(N-1) for i in 0..N-1,
      * so the first and last point coincide (a closed loop). */
     const double denom = n > 1 ? (double)(n - 1) : 1.0;
     int i;
+
+    /* The bounding box is accumulated here rather than by a second walk over
+     * the arrays. min and max are exact and associative, so this is the same
+     * value flowery_bbox() computes; what it saves is reading the two arrays
+     * back - 16 MB at N=1048576 - for something this loop already has in
+     * registers. +inf / -inf are the identities of min / max, so seeding the
+     * accumulators with them is correct even if nothing is sampled, and the
+     * four-lane accumulators below are folded into these scalars before the
+     * scalar tail runs. */
+    const double inf = std::numeric_limits<double>::infinity();
+    double loX = inf, hiX = -inf, loY = inf, hiY = -inf;
 
 #ifdef FLOWERY_HAVE_AVX2
     {
@@ -175,6 +187,8 @@ flowery_points(const FloweryParams *p, double *xs, double *ys)
             const __m256d taud = _mm256_set1_pd(kTau);
             const __m256d dend = _mm256_set1_pd(denom);
             const __m256d lane = _mm256_set_pd(3.0, 2.0, 1.0, 0.0);
+            __m256d vloX = _mm256_set1_pd(inf),  vhiX = _mm256_set1_pd(-inf);
+            __m256d vloY = _mm256_set1_pd(inf),  vhiY = _mm256_set1_pd(-inf);
 
             for (i = 0; i + 4 <= n; i += 4) {
                 const __m256d t =
@@ -196,6 +210,19 @@ flowery_points(const FloweryParams *p, double *xs, double *ys)
                 }
                 _mm256_storeu_pd(xs + i, x);
                 _mm256_storeu_pd(ys + i, y);
+                vloX = _mm256_min_pd(vloX, x);
+                vhiX = _mm256_max_pd(vhiX, x);
+                vloY = _mm256_min_pd(vloY, y);
+                vhiY = _mm256_max_pd(vhiY, y);
+            }
+            {
+                /* Four partial answers each; fold them down so the tail has
+                 * a scalar to compare against. */
+                double b[4];
+                _mm256_storeu_pd(b, vloX); for (int j = 0; j < 4; ++j) if (b[j] < loX) loX = b[j];
+                _mm256_storeu_pd(b, vhiX); for (int j = 0; j < 4; ++j) if (b[j] > hiX) hiX = b[j];
+                _mm256_storeu_pd(b, vloY); for (int j = 0; j < 4; ++j) if (b[j] < loY) loY = b[j];
+                _mm256_storeu_pd(b, vhiY); for (int j = 0; j < 4; ++j) if (b[j] > hiY) hiY = b[j];
             }
             for (; i < n; ++i) {
                 const double t = (double)i / denom;
@@ -208,6 +235,13 @@ flowery_points(const FloweryParams *p, double *xs, double *ys)
                 }
                 xs[i] = x;
                 ys[i] = y;
+                if (x < loX) loX = x;
+                if (x > hiX) hiX = x;
+                if (y < loY) loY = y;
+                if (y > hiY) hiY = y;
+            }
+            if (bbox) {
+                bbox[0] = loX; bbox[1] = loY; bbox[2] = hiX; bbox[3] = hiY;
             }
             return;
         }
@@ -225,6 +259,13 @@ flowery_points(const FloweryParams *p, double *xs, double *ys)
         }
         xs[i] = x;
         ys[i] = y;
+        if (x < loX) loX = x;
+        if (x > hiX) hiX = x;
+        if (y < loY) loY = y;
+        if (y > hiY) hiY = y;
+    }
+    if (bbox) {
+        bbox[0] = loX; bbox[1] = loY; bbox[2] = hiX; bbox[3] = hiY;
     }
 }
 

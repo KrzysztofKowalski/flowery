@@ -55,6 +55,150 @@
 
 #include "flowery.h"
 
+/* -------------------------------------------------------------- raw GL */
+
+/* The curve is drawn as a triangle strip with a shader of our own rather than
+ * by SDL, because on this machine SDL's GL line drawing costs ~72ns a point
+ * and the same geometry handed over as triangles costs ~3ns (NOTES.md has the
+ * table; the harness that produced it is in tmp/linebench/). Past six figures
+ * that difference is the whole frame.
+ *
+ * SDL's text cannot come along for the ride: once our GL state has been bound,
+ * SDL_RenderDebugText puts 0 pixels on the screen - it returns true and sets
+ * no error - and SDL_FlushRenderer, the documented "call this between SDL's
+ * render API and the low-level API", does not repair it from either side. So
+ * the HUD is drawn with the same raw GL, from an atlas of SDL's own debug font
+ * captured through a software renderer before any of this starts. Same 8x8
+ * glyphs, so the HUD looks the way it always did.
+ *
+ * GL is declared by hand here, so that no GL header can fight SDL's. */
+typedef unsigned int GLenum_t;
+typedef unsigned int GLuint_t;
+typedef int          GLint_t;
+typedef int          GLsizei_t;
+typedef char         GLchar_t;
+typedef unsigned int GLbitfield_t;
+typedef ptrdiff_t    GLsizeiptr_t;
+
+#define GL_TRIANGLES        0x0004
+#define GL_TRIANGLE_STRIP   0x0005
+#define GL_DEPTH_TEST       0x0B71
+#define GL_COLOR_BUFFER_BIT 0x00004000
+#define GL_FLOAT            0x1406
+#define GL_UNSIGNED_BYTE    0x1401
+#define GL_ARRAY_BUFFER     0x8892
+#define GL_DYNAMIC_DRAW     0x88E8
+#define GL_VERTEX_SHADER    0x8B31
+#define GL_FRAGMENT_SHADER  0x8B30
+#define GL_COMPILE_STATUS   0x8B81
+#define GL_LINK_STATUS      0x8B82
+#define GL_RGBA             0x1908
+#define GL_BGRA             0x80E1
+#define GL_TEXTURE_2D       0x0DE1
+#define GL_TEXTURE0         0x84C0
+#define GL_TEXTURE_MIN_FILTER 0x2801
+#define GL_TEXTURE_MAG_FILTER 0x2800
+#define GL_TEXTURE_WRAP_S   0x2802
+#define GL_TEXTURE_WRAP_T   0x2803
+#define GL_NEAREST          0x2600
+#define GL_CLAMP_TO_EDGE    0x812F
+#define GL_BLEND            0x0BE2
+#define GL_SRC_ALPHA        0x0302
+#define GL_ONE_MINUS_SRC_ALPHA 0x0303
+#define GL_PACK_ALIGNMENT   0x0D05
+#define GL_UNPACK_ALIGNMENT 0x0CF5
+#define GL_NO_ERROR         0
+
+#define GLFUNCS \
+    X(void,     glClear,        (GLbitfield_t)) \
+    X(void,     glClearColor,   (float, float, float, float)) \
+    X(void,     glViewport,     (int, int, int, int)) \
+    X(void,     glEnable,       (GLenum_t)) \
+    X(void,     glDisable,      (GLenum_t)) \
+    X(void,     glBlendFunc,    (GLenum_t, GLenum_t)) \
+    X(void,     glPixelStorei,  (GLenum_t, int)) \
+    X(void,     glReadPixels,   (int, int, int, int, GLenum_t, GLenum_t, void *)) \
+    X(GLenum_t, glGetError,     (void)) \
+    X(GLuint_t, glCreateShader, (GLenum_t)) \
+    X(void,     glShaderSource, (GLuint_t, int, const GLchar_t *const *, const int *)) \
+    X(void,     glCompileShader,(GLuint_t)) \
+    X(void,     glGetShaderiv,  (GLuint_t, GLenum_t, int *)) \
+    X(void,     glGetShaderInfoLog, (GLuint_t, int, int *, GLchar_t *)) \
+    X(void,     glDeleteShader, (GLuint_t)) \
+    X(GLuint_t, glCreateProgram, (void)) \
+    X(void,     glAttachShader, (GLuint_t, GLuint_t)) \
+    X(void,     glLinkProgram,  (GLuint_t)) \
+    X(void,     glGetProgramiv, (GLuint_t, GLenum_t, int *)) \
+    X(void,     glGetProgramInfoLog, (GLuint_t, int, int *, GLchar_t *)) \
+    X(void,     glUseProgram,   (GLuint_t)) \
+    X(GLint_t,  glGetUniformLocation, (GLuint_t, const GLchar_t *)) \
+    X(void,     glUniform1i,    (GLint_t, int)) \
+    X(void,     glUniform1f,    (GLint_t, float)) \
+    X(void,     glUniform2f,    (GLint_t, float, float)) \
+    X(void,     glUniform4f,    (GLint_t, float, float, float, float)) \
+    X(void,     glGenVertexArrays, (int, GLuint_t *)) \
+    X(void,     glBindVertexArray, (GLuint_t)) \
+    X(void,     glGenBuffers,   (int, GLuint_t *)) \
+    X(void,     glBindBuffer,   (GLenum_t, GLuint_t)) \
+    X(void,     glBufferData,   (GLenum_t, GLsizeiptr_t, const void *, GLenum_t)) \
+    X(void,     glVertexAttribPointer, (GLuint_t, GLint_t, GLenum_t, unsigned char, GLsizei_t, const void *)) \
+    X(void,     glEnableVertexAttribArray, (GLuint_t)) \
+    X(void,     glDrawArrays,   (GLenum_t, int, GLsizei_t)) \
+    X(void,     glGenTextures,  (int, GLuint_t *)) \
+    X(void,     glBindTexture,  (GLenum_t, GLuint_t)) \
+    X(void,     glActiveTexture,(GLenum_t)) \
+    X(void,     glTexImage2D,   (GLenum_t, int, int, int, int, int, GLenum_t, GLenum_t, const void *)) \
+    X(void,     glTexParameteri,(GLenum_t, GLenum_t, int))
+
+#define X(ret, name, args) typedef ret (*PFN_##name) args; static PFN_##name p_##name;
+GLFUNCS
+#undef X
+
+static bool
+load_gl(void)
+{
+    bool ok = true;
+#define X(ret, name, args) \
+    p_##name = (PFN_##name)SDL_GL_GetProcAddress(#name); \
+    if (!p_##name) { SDL_Log("missing GL entry point %s", #name); ok = false; }
+    GLFUNCS
+#undef X
+    return ok;
+}
+
+/* One vertex of the curve strip: where the point is, the half-width normal to
+ * push it along, which side to push it to, and the colour. The width is folded
+ * into the normal on the CPU, so the shader is one multiply-add and the width
+ * is free to vary per point - which is what every stroke mode needs. */
+#define CURVE_FLOATS 9
+
+/* How far the strip is pushed either side of the curve, as a multiple of half
+ * the stroke. Exactly half is not enough: a pixel only lights up when its
+ * centre falls inside the triangle, so a one-pixel band centred on the curve
+ * leaves out the diagonal pixels a Bresenham line would have lit. sqrt(2) is
+ * where the far corner of the neighbouring pixel comes within reach at 45
+ * degrees, and it is the value that stays just under the line path rather than
+ * just over. Measured at N=2001, against what SDL_RenderLines draws:
+ *
+ *     1.0    71.3% of its ink, 3.8% of its pixels with nothing within 1px
+ *     1.2    83.6%                2.1%
+ *     1.414  96.6%                1.1%   <- this
+ *     1.5   101.7%                0.9%
+ */
+#define STROKE_HALF_BIAS 1.41421356f
+
+/* One vertex of the HUD: a position in window points, a texture coordinate and
+ * a colour. */
+#define HUD_FLOATS 8
+
+/* SDL's debug font is 8x8. The atlas is cut from the font itself rather than
+ * hand-written out, so the HUD keeps the exact glyphs it had. */
+#define FONT_W 8
+#define FONT_H 8
+#define FONT_FIRST 32
+#define FONT_LAST  126
+#define FONT_N     (FONT_LAST - FONT_FIRST + 1)
+
 #define WHEELS 3
 
 /* Held-key repeat: how long the key has to be down before it starts
@@ -200,6 +344,12 @@ typedef struct {
     int         ndisp;
     bool        dirtyCurve;     /* xs/ys need recomputing */
     bool        dirtyLayout;    /* pts/disp need recomputing */
+    /* The bounding box of xs/ys as {minx, miny, maxx, maxy}. The sampling
+     * kernel fills this in on its way through the points, so the layout does
+     * not have to walk 16 MB of them again to find out where they are; it
+     * stays valid for as long as xs/ys do, which is what dirtyLayout without
+     * dirtyCurve (a resize) relies on. */
+    double      bbox[4];
 
     /* Stroke geometry, only built when the stroke is more than one pixel of
      * flat: `wid` is the width at each drawn point and `nrm` the unit normal
@@ -218,6 +368,24 @@ typedef struct {
     int        *rbq;
     bool        rbqDirty;
     bool        rainbowParam;   /* hue from the sample index, the old way */
+
+    /* The raw GL path, which is the default. `rawgl` is false only when
+     * FLOWERY_DRAW=lines was asked for: that keeps the SDL renderer and every
+     * line of the code that draws through it, so the two can still be
+     * compared. They never draw into the same frame - SDL's text stops
+     * working the moment our GL state is bound, so the choice is made once at
+     * startup and not revisited. */
+    bool          rawgl;
+    SDL_GLContext glctx;
+    GLuint_t      curveProg, curveVao, curveVbo;
+    GLint_t       curveScale, curveOffset;
+    GLuint_t      hudProg, hudVao, hudVbo, hudTex;
+    GLint_t       hudScale, hudOffset, hudPointScale, hudTexUni;
+    float        *vbuf;         /* curve vertices, grown on demand */
+    int           vcap;         /* vertices the buffer can hold */
+    bool          vertsDirty;   /* the strip in the VBO is out of date */
+    float        *hbuf;         /* HUD vertices, same */
+    int           hcap;
 } App;
 
 /* ---------------------------------------------------------------- colours */
@@ -291,8 +459,15 @@ update_sizes(App *a)
     if (!(scale > 0.0f)) scale = 1.0f;
     a->scale = scale;
     SDL_GetWindowSize(a->window, &a->winW, &a->winH);
-    SDL_SetRenderScale(a->renderer, 1.0f, 1.0f);
-    SDL_GetCurrentRenderOutputSize(a->renderer, &a->outW, &a->outH);
+    if (a->rawgl) {
+        /* The drawable, which for a scaled display is larger than the window.
+         * There is no renderer to ask, and no render scale to keep at 1 -
+         * raw GL draws in whatever units the shader is told to. */
+        SDL_GetWindowSizeInPixels(a->window, &a->outW, &a->outH);
+    } else {
+        SDL_SetRenderScale(a->renderer, 1.0f, 1.0f);
+        SDL_GetCurrentRenderOutputSize(a->renderer, &a->outW, &a->outH);
+    }
     a->dirtyLayout = true;
     /* Only worth saying out loud when something is being measured: a drag
      * resize would otherwise print a line per frame. */
@@ -341,19 +516,23 @@ ensure_buffers(App *a, int n)
 /* Map world coordinates to the drawing surface, preserving aspect
  * ratio (like gnuplot `set size ratio -1`) and centering.
  *
+ * `bbox` is the box of xs/ys, which the caller already has: the screen takes
+ * the one flowery_points() filled in beside them, and save_svg() the one it
+ * asked for when it sampled. Nothing here walks the points to find it.
+ *
  * The layout is worked out in window points and then multiplied by `zoom`:
  * the screen wants physical pixels (zoom = the display scale), the saved SVG
  * wants points (zoom = 1), which is what keeps the file independent of the
  * display it happened to be written on. */
 static void
 build_screen_points(const App *a, const double *xs, const double *ys,
-                    SDL_FPoint *pts, int n, double zoom)
+                    SDL_FPoint *pts, int n, double zoom, const double *bbox)
 {
     double minx, miny, maxx, maxy;
     double scale, mx, my;
     double margin, availW, availH, spanX, spanY, cx, cy;
 
-    flowery_bbox(xs, ys, n, &minx, &miny, &maxx, &maxy);
+    minx = bbox[0]; miny = bbox[1]; maxx = bbox[2]; maxy = bbox[3];
 
     if (a->winW <= 0 || a->winH <= 0) return;
 
@@ -671,14 +850,15 @@ update_geometry(App *a)
 
     if (a->dirtyCurve) {
         const Uint64 t0 = SDL_GetPerformanceCounter();
-        flowery_points(&a->p, a->xs, a->ys);
+        flowery_points(&a->p, a->xs, a->ys, a->bbox);
         if (count) a->tKernel += perf_ms(t0, SDL_GetPerformanceCounter());
         a->dirtyCurve = false;
         a->dirtyLayout = true;
     }
     if (a->dirtyLayout) {
         Uint64 t0 = SDL_GetPerformanceCounter();
-        build_screen_points(a, a->xs, a->ys, a->pts, n, (double)a->scale);
+        build_screen_points(a, a->xs, a->ys, a->pts, n, (double)a->scale,
+                            a->bbox);
         if (count) a->tLayout += perf_ms(t0, SDL_GetPerformanceCounter());
 
         t0 = SDL_GetPerformanceCounter();
@@ -688,6 +868,7 @@ update_geometry(App *a)
         a->dirtyLayout = false;
         a->strokeDirty = true;
         a->rbqDirty = true;
+        a->vertsDirty = true;
     }
 
     /* The hue buckets are positions on the screen, so they follow the layout
@@ -703,13 +884,18 @@ update_geometry(App *a)
 
     /* Only when the stroke is more than one flat pixel. The plain path never
      * builds any of this, which is the point: it is the case that has to stay
-     * a single polyline per colour run. */
-    if (a->strokeDirty && a->width > 1) {
+     * a single polyline per colour run.
+     *
+     * The raw GL path is the exception: its triangle strip needs the unit
+     * normal at every point to push the pair of vertices apart, even for a
+     * one-pixel stroke, so it asks for this whenever it is drawing. */
+    if (a->strokeDirty && (a->width > 1 || a->rawgl)) {
         const Uint64 t0 = SDL_GetPerformanceCounter();
         build_normals(a, a->widthMode == WIDTH_SPEED);
         build_widths(a);
         if (count) a->tThin += perf_ms(t0, SDL_GetPerformanceCounter());
         a->strokeDirty = false;
+        a->vertsDirty = true;
     }
     return true;
 }
@@ -746,12 +932,13 @@ save_svg(const App *a, const char *fname)
     double *xs = (double *)malloc(sizeof(double) * n);
     double *ys = (double *)malloc(sizeof(double) * n);
     SDL_FPoint *pts = (SDL_FPoint *)malloc(sizeof(SDL_FPoint) * n);
+    double bbox[4];
     FILE *fp;
 
     if (!xs || !ys || !pts) { free(xs); free(ys); free(pts); return; }
 
-    flowery_points(&a->p, xs, ys);
-    build_screen_points(a, xs, ys, pts, n, 1.0);   /* points, not pixels */
+    flowery_points(&a->p, xs, ys, bbox);
+    build_screen_points(a, xs, ys, pts, n, 1.0, bbox); /* points, not pixels */
 
     fp = fopen(fname, "w");
     if (!fp) { free(xs); free(ys); free(pts); return; }
@@ -773,6 +960,46 @@ save_svg(const App *a, const char *fname)
 static void
 save_bmp(App *a, const char *fname)
 {
+    if (a->rawgl) {
+        /* glReadPixels hands the rows over bottom-up. BMP wants them that way
+         * too, but SDL_SaveBMP writes the surface's first row *last*, so the
+         * surface has to hold them top-down - which is also how
+         * SDL_RenderReadPixels hands them over on the other path. Flip, so
+         * the two paths produce the same file and a saved frame is not upside
+         * down. */
+        SDL_Surface *surf = SDL_CreateSurface(a->outW, a->outH,
+                                              SDL_PIXELFORMAT_XRGB8888);
+        if (!surf) {
+            SDL_Log("could not make a surface to read into: %s", SDL_GetError());
+            return;
+        }
+        p_glPixelStorei(GL_PACK_ALIGNMENT, 4);
+        p_glReadPixels(0, 0, a->outW, a->outH, GL_BGRA, GL_UNSIGNED_BYTE,
+                       surf->pixels);
+        {
+            unsigned char *base = (unsigned char *)surf->pixels;
+            unsigned char *tmp = (unsigned char *)SDL_malloc((size_t)surf->pitch);
+
+            if (tmp) {
+                for (int y = 0; y < a->outH / 2; ++y) {
+                    unsigned char *lo = base + (size_t)y * surf->pitch;
+                    unsigned char *hi = base + (size_t)(a->outH - 1 - y) * surf->pitch;
+
+                    SDL_memcpy(tmp, lo, (size_t)surf->pitch);
+                    SDL_memcpy(lo, hi, (size_t)surf->pitch);
+                    SDL_memcpy(hi, tmp, (size_t)surf->pitch);
+                }
+                SDL_free(tmp);
+            }
+        }
+        if (!SDL_SaveBMP(surf, fname))
+            SDL_Log("could not save %s: %s", fname, SDL_GetError());
+        else
+            SDL_Log("saved %s (%dx%d)", fname, surf->w, surf->h);
+        SDL_DestroySurface(surf);
+        return;
+    }
+
     SDL_Surface *surf = SDL_RenderReadPixels(a->renderer, NULL);
     if (!surf) {
         SDL_Log("could not read pixels: %s", SDL_GetError());
@@ -783,6 +1010,382 @@ save_bmp(App *a, const char *fname)
     else
         SDL_Log("saved %s (%dx%d)", fname, surf->w, surf->h); /* pixels */
     SDL_DestroySurface(surf);
+}
+
+/* --------------------------------------------------------------- raw GL */
+
+/* Vertex positions arrive in device pixels, which is what the layout is
+ * computed in, and the two uniforms turn that into clip space: one unit is one
+ * pixel and y runs down. */
+static const char *kCurveVS =
+    "#version 330 core\n"
+    "layout(location=0) in vec2 a_pos;\n"
+    "layout(location=1) in vec2 a_half;\n"
+    "layout(location=2) in float a_side;\n"
+    "layout(location=3) in vec4 a_col;\n"
+    "uniform vec2 u_scale; uniform vec2 u_offset;\n"
+    "out vec4 v_col;\n"
+    "void main() {\n"
+    "  vec2 p = a_pos + a_half * a_side;\n"
+    "  gl_Position = vec4(p * u_scale + u_offset, 0.0, 1.0);\n"
+    "  v_col = a_col;\n"
+    "}\n";
+
+static const char *kCurveFS =
+    "#version 330 core\n"
+    "in vec4 v_col; out vec4 o_col;\n"
+    "void main() { o_col = v_col; }\n";
+
+/* The HUD arrives in window points and is scaled by the display scale, so the
+ * 8x8 font stays 8x8 points on any display - 16x16 device pixels at 2x, which
+ * is what SDL's debug text did. Only the atlas's alpha is sampled; the colour
+ * comes from the vertex. */
+static const char *kHudVS =
+    "#version 330 core\n"
+    "layout(location=0) in vec2 a_pos;\n"
+    "layout(location=1) in vec2 a_uv;\n"
+    "layout(location=2) in vec4 a_col;\n"
+    "uniform vec2 u_scale; uniform vec2 u_offset; uniform float u_pscale;\n"
+    "out vec2 v_uv; out vec4 v_col;\n"
+    "void main() {\n"
+    "  vec2 p = a_pos * u_pscale;\n"
+    "  gl_Position = vec4(p * u_scale + u_offset, 0.0, 1.0);\n"
+    "  v_uv = a_uv; v_col = a_col;\n"
+    "}\n";
+
+static const char *kHudFS =
+    "#version 330 core\n"
+    "in vec2 v_uv; in vec4 v_col; out vec4 o_col;\n"
+    "uniform sampler2D u_tex;\n"
+    "void main() { o_col = vec4(v_col.rgb, v_col.a * texture(u_tex, v_uv).a); }\n";
+
+static GLuint_t
+gl_compile(GLenum_t type, const char *src)
+{
+    const GLchar_t *p = src;
+    GLuint_t s = p_glCreateShader(type);
+
+    p_glShaderSource(s, 1, &p, NULL);
+    p_glCompileShader(s);
+
+    int ok = 0;
+    p_glGetShaderiv(s, GL_COMPILE_STATUS, &ok);
+    if (!ok) {
+        char log[1024];
+        log[0] = 0;
+        p_glGetShaderInfoLog(s, sizeof log - 1, NULL, log);
+        SDL_Log("shader did not compile: %s", log);
+        p_glDeleteShader(s);
+        return 0;
+    }
+    return s;
+}
+
+static GLuint_t
+gl_program(const char *vs, const char *fs)
+{
+    GLuint_t v = gl_compile(GL_VERTEX_SHADER, vs);
+    GLuint_t f = gl_compile(GL_FRAGMENT_SHADER, fs);
+    GLuint_t p;
+
+    if (!v || !f) return 0;
+    p = p_glCreateProgram();
+    p_glAttachShader(p, v);
+    p_glAttachShader(p, f);
+    p_glLinkProgram(p);
+
+    int ok = 0;
+    p_glGetProgramiv(p, GL_LINK_STATUS, &ok);
+    if (!ok) {
+        char log[1024];
+        log[0] = 0;
+        p_glGetProgramInfoLog(p, sizeof log - 1, NULL, log);
+        SDL_Log("program did not link: %s", log);
+        return 0;
+    }
+    return p;
+}
+
+/* Byte offset of attribute `n`, for glVertexAttribPointer. */
+#define VOFF(n) ((const void *)(size_t)(n))
+
+/* The glyphs are cut out of SDL's own debug font rather than written out by
+ * hand, so the HUD keeps exactly the characters it had. A software renderer
+ * draws the printable set into a surface - no window, no GL context, nothing
+ * for it to fight with - and the result becomes a GL texture. */
+static bool
+build_font_atlas(App *a)
+{
+    const int w = FONT_W * FONT_N;
+    SDL_Surface *surf = SDL_CreateSurface(w, FONT_H, SDL_PIXELFORMAT_ARGB8888);
+    SDL_Renderer *sw;
+    unsigned char *px;
+    int i, x, y;
+
+    if (!surf) return false;
+    sw = SDL_CreateSoftwareRenderer(surf);
+    if (!sw) {
+        SDL_DestroySurface(surf);
+        return false;
+    }
+    SDL_SetRenderDrawColor(sw, 0, 0, 0, 0);
+    SDL_RenderClear(sw);
+    SDL_SetRenderDrawColor(sw, 255, 255, 255, 255);
+    for (i = 0; i < FONT_N; ++i) {
+        const char ch[2] = { (char)(FONT_FIRST + i), 0 };
+        SDL_RenderDebugText(sw, (float)(i * FONT_W), 0.0f, ch);
+    }
+    /* SDL's renderers queue their commands and run them at present, so
+     * without this the surface is still empty and every glyph comes out
+     * blank. Measured: 0 of 760 columns filled before, 563 after. */
+    SDL_RenderPresent(sw);
+    SDL_DestroyRenderer(sw);
+
+    /* ARGB8888 is B,G,R,A in memory. The glyphs are white, so the brightest
+     * channel is the coverage; alpha is written as well but not by every
+     * rasteriser, so take whichever of the two says more. */
+    px = (unsigned char *)SDL_malloc((size_t)w * FONT_H * 4);
+    if (!px) {
+        SDL_DestroySurface(surf);
+        return false;
+    }
+    for (y = 0; y < FONT_H; ++y) {
+        const unsigned char *row = (const unsigned char *)surf->pixels
+                                 + (size_t)y * surf->pitch;
+        for (x = 0; x < w; ++x) {
+            unsigned char v = row[x * 4 + 2];
+            unsigned char *o = px + ((size_t)y * w + x) * 4;
+
+            if (row[x * 4 + 1] > v) v = row[x * 4 + 1];
+            if (row[x * 4 + 0] > v) v = row[x * 4 + 0];
+            if (row[x * 4 + 3] > v) v = row[x * 4 + 3];
+            o[0] = 255; o[1] = 255; o[2] = 255; o[3] = v;
+        }
+    }
+    SDL_DestroySurface(surf);
+
+    p_glGenTextures(1, &a->hudTex);
+    p_glBindTexture(GL_TEXTURE_2D, a->hudTex);
+    p_glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    p_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, FONT_H, 0, GL_RGBA,
+                   GL_UNSIGNED_BYTE, px);
+    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    SDL_free(px);
+    return true;
+}
+
+static bool
+gl_init(App *a)
+{
+    a->curveProg = gl_program(kCurveVS, kCurveFS);
+    a->hudProg = gl_program(kHudVS, kHudFS);
+    if (!a->curveProg || !a->hudProg) return false;
+
+    a->curveScale = p_glGetUniformLocation(a->curveProg, "u_scale");
+    a->curveOffset = p_glGetUniformLocation(a->curveProg, "u_offset");
+    a->hudScale = p_glGetUniformLocation(a->hudProg, "u_scale");
+    a->hudOffset = p_glGetUniformLocation(a->hudProg, "u_offset");
+    a->hudPointScale = p_glGetUniformLocation(a->hudProg, "u_pscale");
+    a->hudTexUni = p_glGetUniformLocation(a->hudProg, "u_tex");
+
+    p_glGenVertexArrays(1, &a->curveVao);
+    p_glBindVertexArray(a->curveVao);
+    p_glGenBuffers(1, &a->curveVbo);
+    p_glBindBuffer(GL_ARRAY_BUFFER, a->curveVbo);
+    p_glEnableVertexAttribArray(0);
+    p_glVertexAttribPointer(0, 2, GL_FLOAT, 0, CURVE_FLOATS * (GLsizei_t)sizeof(float), VOFF(0));
+    p_glEnableVertexAttribArray(1);
+    p_glVertexAttribPointer(1, 2, GL_FLOAT, 0, CURVE_FLOATS * (GLsizei_t)sizeof(float), VOFF(2 * sizeof(float)));
+    p_glEnableVertexAttribArray(2);
+    p_glVertexAttribPointer(2, 1, GL_FLOAT, 0, CURVE_FLOATS * (GLsizei_t)sizeof(float), VOFF(4 * sizeof(float)));
+    p_glEnableVertexAttribArray(3);
+    p_glVertexAttribPointer(3, 4, GL_FLOAT, 0, CURVE_FLOATS * (GLsizei_t)sizeof(float), VOFF(5 * sizeof(float)));
+
+    p_glGenVertexArrays(1, &a->hudVao);
+    p_glBindVertexArray(a->hudVao);
+    p_glGenBuffers(1, &a->hudVbo);
+    p_glBindBuffer(GL_ARRAY_BUFFER, a->hudVbo);
+    p_glEnableVertexAttribArray(0);
+    p_glVertexAttribPointer(0, 2, GL_FLOAT, 0, HUD_FLOATS * (GLsizei_t)sizeof(float), VOFF(0));
+    p_glEnableVertexAttribArray(1);
+    p_glVertexAttribPointer(1, 2, GL_FLOAT, 0, HUD_FLOATS * (GLsizei_t)sizeof(float), VOFF(2 * sizeof(float)));
+    p_glEnableVertexAttribArray(2);
+    p_glVertexAttribPointer(2, 4, GL_FLOAT, 0, HUD_FLOATS * (GLsizei_t)sizeof(float), VOFF(4 * sizeof(float)));
+
+    p_glBindVertexArray(0);
+    p_glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    if (!build_font_atlas(a)) {
+        SDL_Log("could not build the font atlas; the HUD would be blank");
+        return false;
+    }
+    p_glDisable(GL_DEPTH_TEST);
+    p_glEnable(GL_BLEND);
+    p_glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    return true;
+}
+
+/* The vertex scratch follows the sample count, which the user can double and
+ * halve, so it grows on demand like the point buffers do. */
+static bool
+ensure_curve_verts(App *a, int verts)
+{
+    float *v;
+
+    if (verts <= a->vcap) return true;
+    v = (float *)realloc(a->vbuf,
+                         sizeof(float) * CURVE_FLOATS * (size_t)verts);
+    if (!v) return false;
+    a->vbuf = v;
+    a->vcap = verts;
+    return true;
+}
+
+static bool
+ensure_hud_verts(App *a, int verts)
+{
+    float *v;
+
+    if (verts <= a->hcap) return true;
+    v = (float *)realloc(a->hbuf,
+                         sizeof(float) * HUD_FLOATS * (size_t)verts);
+    if (!v) return false;
+    a->hbuf = v;
+    a->hcap = verts;
+    return true;
+}
+
+/* The whole curve as one triangle strip: two vertices per drawn point, each
+ * carrying half the stroke folded into the normal, so the shader only has to
+ * push the pair apart, and the colour on every vertex.
+ *
+ * That last part is what the runs were for. SDL_RenderLines takes one colour
+ * per call, so the rainbow had to be cut into stretches of one hue and the run
+ * boundaries were arithmetic on `didx`; a shader takes the colour per vertex,
+ * so the hue is simply the point's own and there is nothing to cut. The hue
+ * itself is unchanged - the sample index in the parametric mode, the direction
+ * from the centre in the other. */
+static void
+draw_curve_gl(App *a)
+{
+    const int m = a->ndisp;
+    const bool thick = a->width > 1;
+    const bool rainbow = a->rainbow;
+    const bool byAngle = rainbow && !a->rainbowParam;
+    const long long n = a->p.samples;
+    float *v;
+    int i, k = 0;
+
+    if (m < 2 || !ensure_curve_verts(a, m * 2)) return;
+    v = a->vbuf;
+
+    /* The strip only changes when something it is built from does, and
+     * nothing it is built from is per-frame - so it is built and uploaded
+     * once and then drawn from the VBO until a flag says otherwise. That is
+     * the difference between the draw costing what the geometry costs and it
+     * costing what the upload of 58 MB costs: an idle frame at a million
+     * samples is one glDrawArrays and no CPU work at all.
+     *
+     * A benchmark forces the curve dirty every frame, so it always takes the
+     * first branch - the worst case, which is what it is for. */
+    if (a->vertsDirty) {
+        for (i = 0; i < m; ++i) {
+            float cr = 148.0f / 255.0f, cg = 0.0f, cb = 211.0f / 255.0f;
+
+            if (rainbow) {
+                const long long q = byAngle
+                                  ? (long long)a->rbq[i]
+                                  : (long long)a->didx[i] * RAINBOW_STEPS / n;
+                Uint8 r, g, b;
+
+                hsv_to_rgb(360.0f * ((float)q + 0.5f) / (float)RAINBOW_STEPS,
+                           &r, &g, &b);
+                cr = (float)r / 255.0f;
+                cg = (float)g / 255.0f;
+                cb = (float)b / 255.0f;
+            }
+
+            {
+                const float half = 0.5f * (float)(thick ? a->wid[i] : 1)
+                                 * STROKE_HALF_BIAS;
+                const float hx = a->nrm[i].x * half, hy = a->nrm[i].y * half;
+
+                for (int side = 0; side < 2; ++side) {
+                    v[k++] = a->disp[i].x;
+                    v[k++] = a->disp[i].y;
+                    v[k++] = hx;
+                    v[k++] = hy;
+                    v[k++] = side ? -1.0f : 1.0f;
+                    v[k++] = cr; v[k++] = cg; v[k++] = cb; v[k++] = 1.0f;
+                }
+            }
+        }
+
+        p_glBindVertexArray(a->curveVao);
+        p_glBindBuffer(GL_ARRAY_BUFFER, a->curveVbo);
+        p_glBufferData(GL_ARRAY_BUFFER,
+                       (GLsizeiptr_t)k * (GLsizeiptr_t)sizeof(float),
+                       v, GL_DYNAMIC_DRAW);
+        a->vertsDirty = false;
+    }
+
+    p_glUseProgram(a->curveProg);
+    p_glUniform2f(a->curveScale, 2.0f / (float)a->outW, -2.0f / (float)a->outH);
+    p_glUniform2f(a->curveOffset, -1.0f, 1.0f);
+    p_glBindVertexArray(a->curveVao);
+    p_glDrawArrays(GL_TRIANGLE_STRIP, 0, m * 2);
+}
+
+/* One glyph: a quad in window points, with the atlas's columns for that
+ * character. Six vertices, because the strip the curve uses is no use here -
+ * the glyphs do not touch. */
+static void
+hud_glyph(App *a, int *k, float x, float y, int g)
+{
+    static const float q[6][4] = {
+        { 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 1.0f, 0.0f },
+        { 1.0f, 1.0f, 1.0f, 1.0f },
+        { 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f },
+        { 0.0f, 1.0f, 0.0f, 1.0f },
+    };
+    const float u0 = (float)(g * FONT_W) / (float)(FONT_W * FONT_N);
+    const float u1 = (float)((g + 1) * FONT_W) / (float)(FONT_W * FONT_N);
+
+    for (int i = 0; i < 6; ++i) {
+        float *v = a->hbuf + (size_t)(*k) * HUD_FLOATS;
+
+        v[0] = x + q[i][0] * (float)FONT_W;
+        v[1] = y + q[i][1] * (float)FONT_H;
+        v[2] = q[i][2] ? u1 : u0;
+        v[3] = q[i][3];
+        v[4] = 1.0f; v[5] = 1.0f; v[6] = 1.0f; v[7] = 1.0f;
+        ++*k;
+    }
+}
+
+static void
+hud_text(App *a, int *k, float x, float y, const char *text)
+{
+    for (; *text; ++text) {
+        const unsigned char ch = (unsigned char)*text;
+
+        if (ch >= FONT_FIRST && ch <= FONT_LAST)
+            hud_glyph(a, k, x, y, ch - FONT_FIRST);
+        x += (float)FONT_W;
+    }
+}
+
+static int
+hud_text_quads(const char *text)
+{
+    const char *c;
+    int n = 0;
+
+    for (c = text; *c; ++c) ++n;
+    return n * 6;
 }
 
 /* ---------------------------------------------------------------- render */
@@ -925,6 +1528,13 @@ draw_curve(App *a)
 static void
 render_frame(App *a)
 {
+    if (a->rawgl) {
+        p_glViewport(0, 0, a->outW, a->outH);
+        p_glClearColor(8.0f / 255.0f, 8.0f / 255.0f, 12.0f / 255.0f, 1.0f);
+        p_glClear(GL_COLOR_BUFFER_BIT);
+        draw_curve_gl(a);
+        return;
+    }
     SDL_SetRenderDrawColor(a->renderer, 8, 8, 12, 255);
     SDL_RenderClear(a->renderer);
     draw_curve(a);
@@ -939,31 +1549,34 @@ draw_debug_text(const App *a, const char *text)
     SDL_RenderDebugTextFormat(a->renderer, 12.0f, 12.0f, "%s", text);
 }
 
+/* The help overlay, in one place because both drawing paths show it. */
+static const char *const help_lines[] = {
+    "1 2 3        select wheel",
+    "Up/Down      wheel teeth n",
+    "Left/Right   phase offset s",
+    "[  ]         wheel radius a",
+    "+  -         samples (halve/double)",
+    "space        rotate wheels (animate)",
+    ",  .         stroke width (thinner/thicker)",
+    "<  >         waves along the curve (fewer/more)",
+    "v            stroke variation (flat/taper/speed/wave)",
+    "c            rainbow colour",
+    "r            randomise",
+    "f            fullscreen",
+    "s            save SVG",
+    "b            save BMP",
+    "h            hide help",
+    "Esc / q      quit",
+};
+#define HELP_N (sizeof help_lines / sizeof help_lines[0])
+
 static void
 draw_help(const App *a)
 {
     SDL_SetRenderDrawColor(a->renderer, 255, 255, 255, 255);
-    const char *lines[] = {
-        "1 2 3        select wheel",
-        "Up/Down      wheel teeth n",
-        "Left/Right   phase offset s",
-        "[  ]         wheel radius a",
-        "+  -         samples (halve/double)",
-        "space        rotate wheels (animate)",
-        ",  .         stroke width (thinner/thicker)",
-        "<  >         waves along the curve (fewer/more)",
-        "v            stroke variation (flat/taper/speed/wave)",
-        "c            rainbow colour",
-        "r            randomise",
-        "f            fullscreen",
-        "s            save SVG",
-        "b            save BMP",
-        "h            hide help",
-        "Esc / q      quit",
-    };
     float y = 40.0f;
-    for (size_t i = 0; i < sizeof(lines) / sizeof(lines[0]); ++i) {
-        SDL_RenderDebugText(a->renderer, 12.0f, y, lines[i]);
+    for (size_t i = 0; i < HELP_N; ++i) {
+        SDL_RenderDebugText(a->renderer, 12.0f, y, help_lines[i]);
         y += SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE + 4.0f;
     }
 }
@@ -1002,14 +1615,52 @@ format_status(const App *a, char *buf, size_t bufsz)
 /* The status line and the help overlay stay in window points, so the renderer
  * goes back to the display scale for them and back to 1 for the curve: one
  * device pixel per point is what the curve wants, and a point per pixel is
- * what the 8x8-pixel debug font needs to keep its size on any display. */
+ * what the 8x8-pixel debug font needs to keep its size on any display.
+ *
+ * The raw GL path does the same thing with a uniform, and draws both lots of
+ * text in one call. */
 static void
 draw_overlays(App *a)
 {
     char status[320];
+    int ntext, k = 0;
+
+    format_status(a, status, sizeof status);
+
+    if (a->rawgl) {
+        ntext = hud_text_quads(status);
+        for (size_t i = 0; a->help && i < HELP_N; ++i)
+            ntext += hud_text_quads(help_lines[i]);
+        if (!ensure_hud_verts(a, ntext)) return;
+
+        hud_text(a, &k, 12.0f, 12.0f, status);
+        if (a->help) {
+            float y = 40.0f;
+            for (size_t i = 0; i < HELP_N; ++i) {
+                hud_text(a, &k, 12.0f, y, help_lines[i]);
+                y += (float)FONT_H + 4.0f;
+            }
+        }
+
+        p_glUseProgram(a->hudProg);
+        p_glUniform2f(a->hudScale, 2.0f / (float)a->outW, -2.0f / (float)a->outH);
+        p_glUniform2f(a->hudOffset, -1.0f, 1.0f);
+        p_glUniform1f(a->hudPointScale, a->scale);
+        p_glUniform1i(a->hudTexUni, 0);
+        p_glActiveTexture(GL_TEXTURE0);
+        p_glBindTexture(GL_TEXTURE_2D, a->hudTex);
+        p_glBindVertexArray(a->hudVao);
+        p_glBindBuffer(GL_ARRAY_BUFFER, a->hudVbo);
+        /* `k` counts vertices here, not floats - the curve's builder counts
+         * floats, this one does not. */
+        p_glBufferData(GL_ARRAY_BUFFER,
+                       (GLsizeiptr_t)k * HUD_FLOATS * (GLsizeiptr_t)sizeof(float),
+                       a->hbuf, GL_DYNAMIC_DRAW);
+        p_glDrawArrays(GL_TRIANGLES, 0, k);
+        return;
+    }
 
     SDL_SetRenderScale(a->renderer, a->scale, a->scale);
-    format_status(a, status, sizeof status);
     draw_debug_text(a, status);
     if (a->help)
         draw_help(a);
@@ -1155,6 +1806,7 @@ handle_key(App *a, const SDL_KeyboardEvent *ke)
         break;
     case SDLK_C:
         a->rainbow = !a->rainbow;
+        a->vertsDirty = true;       /* the colour is on the vertices now */
         break;
     case SDLK_R:
         randomize_wheels(&a->p);
@@ -1258,6 +1910,13 @@ main(int argc, char *argv[])
     app.widthMode = WIDTH_FLAT;
     app.waveCount = DEFAULT_WAVE_COUNT;
 
+    /* Drawing the curve through raw GL is the default; FLOWERY_DRAW=lines
+     * asks for the SDL renderer and the line drawing it does instead, for an
+     * A/B and for a machine where the shaders will not run. */
+    app.rawgl = true;
+    if (SDL_getenv("FLOWERY_DRAW"))
+        app.rawgl = SDL_strcasecmp(SDL_getenv("FLOWERY_DRAW"), "lines") != 0;
+
     /* The stroke can be set from the environment as well as from the keys,
      * which is what lets a benchmark measure a width without a keyboard. */
     if (SDL_getenv("FLOWERY_WIDTH"))
@@ -1310,53 +1969,102 @@ main(int argc, char *argv[])
     app.window = SDL_CreateWindow(
         "flowery — spirograph (SDL3)",
         900, 900,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY
+        | (app.rawgl ? SDL_WINDOW_OPENGL : 0));
     if (!app.window) {
         SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
         return 1;
     }
-    /* Left alone, SDL draws a line as one quad per line *pixel*; at 2880x1800
-     * that is 20x the cost of the driver's own line API, which is only used
-     * at render scale 1. An explicit SDL_RENDER_LINE_METHOD wins, so the
-     * other methods stay reachable for comparison. Must precede the renderer. */
-    if (!SDL_GetHint(SDL_HINT_RENDER_LINE_METHOD))
-        SDL_SetHint(SDL_HINT_RENDER_LINE_METHOD, "2");
+    /* Drawing through raw GL, or through SDL's renderer as before. The two do
+     * not mix - SDL's text stops drawing once our GL state has been bound -
+     * so this is decided once, here, and nothing below switches. */
+    if (app.rawgl) {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        app.glctx = SDL_GL_CreateContext(app.window);
+        if (!app.glctx) {
+            SDL_Log("SDL_GL_CreateContext failed: %s", SDL_GetError());
+            return 1;
+        }
+        if (!SDL_GL_MakeCurrent(app.window, app.glctx)) {
+            SDL_Log("SDL_GL_MakeCurrent failed: %s", SDL_GetError());
+            return 1;
+        }
+        if (!load_gl() || !gl_init(&app)) {
+            SDL_Log("could not set up the GL drawing path; "
+                    "run with FLOWERY_DRAW=lines to use SDL's renderer instead");
+            return 1;
+        }
+    } else {
+        /* Left alone, SDL draws a line as one quad per line *pixel*; at
+         * 2880x1800 that is 20x the cost of the driver's own line API, which
+         * is only used at render scale 1. An explicit SDL_RENDER_LINE_METHOD
+         * wins, so the other methods stay reachable for comparison. Must
+         * precede the renderer. */
+        if (!SDL_GetHint(SDL_HINT_RENDER_LINE_METHOD))
+            SDL_SetHint(SDL_HINT_RENDER_LINE_METHOD, "2");
 
-    /* The fullscreen size is what the earlier measurements were taken at, so
-     * a benchmark has to be able to reach it too. */
+        /* Vulkan draws these lines about ten times faster than the GL driver
+         * (NOTES.md has the measurements). It was the default for that reason
+         * and it is not any more, because on this machine it also breaks the
+         * frame on the way to the screen: with a large sample count the HUD
+         * comes out smeared, and the smear cannot be caught in a screenshot,
+         * so the rendered frame is right and the presentation is not - a
+         * swapchain problem in Mesa's Vulkan driver for Gen7.5, which says so
+         * itself at every start:
+         *
+         *     MESA-INTEL: warning: Haswell Vulkan support is incomplete
+         *
+         * An explicit SDL_RENDER_DRIVER still wins, so both stay reachable. */
+        if (!SDL_GetHint(SDL_HINT_RENDER_DRIVER))
+            app.renderer = SDL_CreateRenderer(app.window, "opengl");
+        if (!app.renderer)
+            app.renderer = SDL_CreateRenderer(app.window, NULL);
+        if (!app.renderer) {
+            SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
+            return 1;
+        }
+    }
+
+    /* The window's pixel size is only known once there is something to draw
+     * with, and the first pixel-size event may well arrive after the first
+     * frame. */
+    update_sizes(&app);
+    if (app.rawgl)
+        SDL_Log("window %dx%d points, raw GL %dx%d pixels (scale %.2f)",
+                app.winW, app.winH, app.outW, app.outH, (double)app.scale);
+    else
+        SDL_Log("window %dx%d points, renderer %s %dx%d pixels (scale %.2f)",
+                app.winW, app.winH, SDL_GetRendererName(app.renderer),
+                app.outW, app.outH, (double)app.scale);
+
+    /* Fullscreen on startup, so `run.sh` can put the whole panel behind the
+     * curve without anyone pressing `f`. On this display that is the only way
+     * to get the native 2880x1800 back buffer - a windowed one is whatever
+     * Hyprland decides, and it resizes it underneath us regardless.
+     * FLOWERY_BENCH_FULLSCREEN stays as it was for the benchmarks; this one is
+     * for the app. `f` still toggles either way. */
+    if (SDL_getenv("FLOWERY_FULLSCREEN")
+        && atoi(SDL_getenv("FLOWERY_FULLSCREEN")) != 0) {
+        app.fullscreen = true;
+        SDL_SetWindowFullscreen(app.window, true);
+    }
     if (app.benchFrames > 0 && SDL_getenv("FLOWERY_BENCH_FULLSCREEN")) {
         app.fullscreen = true;
         SDL_SetWindowFullscreen(app.window, true);
     }
 
-    /* SDL's line drawing costs about an order of magnitude more on the GL
-     * driver than on Vulkan - ~80ns vs ~7ns per point here, which at six
-     * figures is the whole frame (NOTES.md has the measurements). The two
-     * draw the same picture: at 262144 samples the frames agree pixel for
-     * pixel, 99.6% overlap and the same ink to 0.1%. So Vulkan is asked for
-     * by name, with SDL's own choice as the fallback for machines that have
-     * no Vulkan at all. An explicit SDL_RENDER_DRIVER still wins, which
-     * keeps the other drivers reachable for comparison. */
-    if (!SDL_GetHint(SDL_HINT_RENDER_DRIVER))
-        app.renderer = SDL_CreateRenderer(app.window, "vulkan");
-    if (!app.renderer)
-        app.renderer = SDL_CreateRenderer(app.window, NULL);
-    if (!app.renderer) {
-        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
-        return 1;
-    }
-    /* The window's pixel size is only known once the renderer exists, and
-     * the first pixel-size event may well arrive after the first frame. */
-    update_sizes(&app);
-    SDL_Log("window %dx%d points, renderer %s %dx%d pixels (scale %.2f)",
-            app.winW, app.winH, SDL_GetRendererName(app.renderer),
-            app.outW, app.outH, (double)app.scale);
-
     /* Pace the loop off the display when we can (it also stops the tearing
      * an 8 ms sleep never did); only fall back to sleeping if vsync is not
      * available, as it is not for the offscreen driver. A benchmark turns it
      * off: timing a frame that is waiting for vblank times the display. */
-    app.vsync = SDL_SetRenderVSync(app.renderer, app.benchFrames > 0 ? 0 : 1);
+    if (app.rawgl)
+        app.vsync = SDL_GL_SetSwapInterval(app.benchFrames > 0 ? 0 : 1) == 0;
+    else
+        app.vsync = SDL_SetRenderVSync(app.renderer, app.benchFrames > 0 ? 0 : 1);
     SDL_Log("vsync: %s", app.vsync ? "on" : "unavailable");
 
     while (1) {
@@ -1434,7 +2142,10 @@ main(int argc, char *argv[])
             && app.seen >= app.benchFrames + BENCH_WARMUP_FRAMES)
             save_bmp(&app, app.benchBmp);
 
-        SDL_RenderPresent(app.renderer);
+        if (app.rawgl)
+            SDL_GL_SwapWindow(app.window);
+        else
+            SDL_RenderPresent(app.renderer);
         const Uint64 t4 = SDL_GetPerformanceCounter();
 
         if (counted) {

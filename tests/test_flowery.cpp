@@ -62,7 +62,7 @@ test_single_wheel(void)
     FloweryParams p = params(1, 0, 0, 1, 0, 0, 0, 0, 0, 5);
     int i;
 
-    flowery_points(&p, xs, ys);
+    flowery_points(&p, xs, ys, NULL);
     for (i = 0; i < 5; ++i) {
         char msg[160];
         snprintf(msg, sizeof msg,
@@ -80,7 +80,7 @@ test_loop_is_closed(void)
     double xs[2001], ys[2001];
     FloweryParams p = params(7, 11, 13, 1, 1, 1, 0, 0, 0, 2001);
 
-    flowery_points(&p, xs, ys);
+    flowery_points(&p, xs, ys, NULL);
     CHECK(fabs(xs[2000] - xs[0]) < 1e-12, "loop is not closed in x");
     CHECK(fabs(ys[2000] - ys[0]) < 1e-12, "loop is not closed in y");
     CHECK(fabs(xs[0] - 3.0) < 1e-12 && fabs(ys[0]) < 1e-12,
@@ -96,7 +96,7 @@ test_wheels_superpose(void)
     FloweryParams p = params(1, 1, 1, 1, 1, 1, 0, 0, 0, 101);
     int i;
 
-    flowery_points(&p, xs, ys);
+    flowery_points(&p, xs, ys, NULL);
     for (i = 0; i < 101; ++i) {
         const double t = (double)i / 100.0;
         const double ang = 4.0 * asin(1.0) * t;
@@ -116,7 +116,7 @@ test_phases_cancel(void)
     FloweryParams p = params(5, 5, 5, 1, 1, 1, 0.0, 1.0 / 3.0, 2.0 / 3.0, 64);
     int i;
 
-    flowery_points(&p, xs, ys);
+    flowery_points(&p, xs, ys, NULL);
     for (i = 0; i < 64; ++i) {
         char msg[160];
         snprintf(msg, sizeof msg, "cancelling phases, point %d is (%g, %g)",
@@ -133,7 +133,7 @@ test_zero_wheels(void)
     FloweryParams p = params(0, 0, 0, 1, 1, 1, 0, 0, 0, 8);
     int i;
 
-    flowery_points(&p, xs, ys);
+    flowery_points(&p, xs, ys, NULL);
     for (i = 0; i < 8; ++i) {
         char msg[160];
         snprintf(msg, sizeof msg, "stationary wheels, point %d is (%g, %g)",
@@ -151,8 +151,8 @@ test_radius_scales(void)
     FloweryParams p2 = params(5, 7, 3, 2, 2, 2, 0, 0, 0, 200);
     int i;
 
-    flowery_points(&p1, ax, ay);
-    flowery_points(&p2, bx, by);
+    flowery_points(&p1, ax, ay, NULL);
+    flowery_points(&p2, bx, by, NULL);
     for (i = 0; i < 200; ++i) {
         char msg[160];
         snprintf(msg, sizeof msg, "radius does not scale at point %d", i);
@@ -167,7 +167,7 @@ test_a_single_sample(void)
     double xs[1] = { 0.0 }, ys[1] = { 0.0 };
     FloweryParams p = params(1, 1, 1, 1, 1, 1, 0, 0, 0, 1);
 
-    flowery_points(&p, xs, ys);      /* must not divide by zero */
+    flowery_points(&p, xs, ys, NULL);      /* must not divide by zero */
     CHECK(fabs(xs[0] - 3.0) < 1e-12 && fabs(ys[0]) < 1e-12,
           "a single sample should evaluate the curve at t=0");
 }
@@ -205,7 +205,7 @@ test_default_wheel_is_sane(void)
         char msg[160];
 
         if (!xs || !ys) { CHECK(0, "out of memory"); free(xs); free(ys); return; }
-        flowery_points(&p, xs, ys);
+        flowery_points(&p, xs, ys, NULL);
         for (i = 0; i < n; ++i) {
             if (!isfinite(xs[i]) || !isfinite(ys[i])) {
                 snprintf(msg, sizeof msg, "non-finite point %d at samples=%d", i, n);
@@ -424,7 +424,7 @@ check_svg(const char *path, Oracle *o)
     }
 
     p = params(n1, n2, n3, 1, 1, 1, 0, 0, 0, samples);
-    flowery_points(&p, xs, ys);
+    flowery_points(&p, xs, ys, NULL);
     s = fit_similarity(xs, ys, ux, uy, count, &ox, &oy, &avg, &max);
 
     if (!(s > 0.0)) {

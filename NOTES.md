@@ -480,10 +480,12 @@ documented "occasionally misses line endpoints based on hardware driver quirks"
 showing up on long chords — but the ink total still matches to 0.6% (145826
 against 145009) and the two frames cannot be told apart side by side.
 
-So `main()` asks for Vulkan by name, with SDL's own pick as the fallback, and an
-explicit `SDL_RENDER_DRIVER` still wins so every backend stays reachable for
-exactly this comparison. Both fallbacks were checked: with `SDL_VULKAN_LIBRARY`
-pointed at nothing it comes up `opengl`.
+`main()` asked for Vulkan by name on the strength of that, with SDL's own pick
+as the fallback, and an explicit `SDL_RENDER_DRIVER` still wins so every backend
+stays reachable for exactly this comparison. Both fallbacks were checked: with
+`SDL_VULKAN_LIBRARY` pointed at nothing it comes up `opengl`. **That default was
+reversed the next day** — see "The default renderer went back to GL" below,
+which is the part of this section that aged.
 
 Two caveats. Vulkan's `present` is the more expensive of the two (2.6-3.2 ms
 against 0.4-2.1 ms), so at the *default* sample count, where the draw is now
@@ -631,6 +633,260 @@ deliberate — the SVG is the artefact compared against gnuplot and the oracle
 parses its polyline — but it does mean the saved file does not carry the stroke,
 and if it should, that is a small change.
 
+### The wave
+
+The stroke modes are flat, taper, speed and wave. `wave` is the sine: the width
+runs `1 + (maxw-1) * (0.5 - 0.5*cos(2*pi*waves*t))`, so `t=0` is exactly the
+thinnest line the app can draw rather than an arbitrary point on the curve, and
+the peaks are exactly `maxw`. `v` cycles the modes, `,` `.` are the width,
+`<` `>` (shifted comma and period) are how many waves fit along the curve —
+1 to 64, seven by default.
+
+The one thing worth writing down is what it cost to compute. A cosine per
+drawn point is a libm call per point, and at 802681 points (what N=1048576
+draws) that measured **26.25 ns a point, 21.070 ms a frame** — comparable to the
+whole drawing it was in aid of. The width only ever lands on one of `maxw`
+integers, so the phase is accumulated and the answer is looked up in a
+1024-entry table of finished widths: **1.76 ns a point, 1.415 ms**, a 19.7 ms
+saving. In the app that shows as `thin` of 9.93 ms for `wave` against 8.76 for
+`flat` at the same width — the table, not the cosine.
+
+Measured, offscreen 900x900, `thin`/`draw` in ms:
+
+| | N=262144 | N=1048576 |
+|---|---|---|
+| `flat` w=7 | 2.63 / 17.29 | 8.76 / 58.17 |
+| `wave/1` | 3.19 / 7.82 | 10.15 / 27.81 |
+| `wave/7` | 3.20 / 7.99 | 9.93 / 25.95 |
+| `wave/64` | 3.17 / 7.77 | 10.61 / 28.38 |
+| `taper` w=7 | 3.50 / 7.47 | 11.04 / 25.98 |
+
+`wave` comes out cheaper than `flat` at the same width because its mean width
+is 3.5, not 7, and the wave count is nearly free: the number of runs is
+`12*waves + 1` (85 at seven waves, 769 at sixty-four), so a finer wave does not
+fragment the drawing. The default appearance is untouched — the frame at `w=1
+flat` is byte-for-byte the one from before the mode existed, checked with
+`cmp`.
+
+Two honest notes. The wave count only has a peak where the samples can resolve
+one: at N=32, or N=2001 with 64 waves, the maximum width reached is 6 rather
+than 7. That is sampling, not arithmetic. And the mean is 3.501 rather than
+4.0 because the width is truncated to whole pixels, exactly as `taper` does.
+
+### How many colours there are
+
+`RAINBOW_STEPS` was 256 with a comment claiming that was past what the eye
+resolves. It is not, and 256 was throwing away most of the wheel. At full
+saturation the colour has one channel at 255, one at 0 and one walking between
+them, so eight-bit RGB can express `6*255` of them and no more. Measured, the
+number of distinct colours a sweep of the wheel actually produces:
+
+| steps | distinct colours |
+|---|---|
+| 256 | 256 |
+| 1024 | 1023 |
+| **1530** | **1527** |
+| 1536, 4096, 65536 | 1527 (identical — repeats) |
+
+So 1530 is the whole wheel and everything past it is a duplicate. The cost is
+per *draw call*, not per colour — the run count is bounded by
+`min(RAINBOW_STEPS, drawn points)` — so the ceiling is 1530 calls, about
+0.36 ms, whatever the sample count. Measured at N=2001: `draw` 0.049 -> 0.241 ms
+for the 1274 extra calls, about 150 ns each.
+
+The number of colours *in a frame* is a different question, and it is answered
+by the geometry, not by this constant: the same build draws 215 distinct
+colours at 480/648/816 and 1521-1528 at 5/7/9. See below.
+
+### The rainbow is destroyed by the order it is drawn in
+
+This one is worth reading before "fixing" the rainbow a third time.
+
+The hue walks the wheel with the sample index, so the runs come out in hue
+order and the **last** run drawn wins wherever the curve crosses itself. A
+spirograph crosses itself a great deal: at N=65536 the curve has about 1.4M
+device pixels of arc and leaves only ~35k distinct ones, so each pixel is
+painted some forty times. The last few percent of the arc alone is enough to
+repaint the whole figure, and the last few percent is red.
+
+Measured, the ink in a frame by hue, 15-degree buckets, at 480/648/816:
+
+| N | 0-15 | ... | 315-330 | 330-345 | 345-360 |
+|---|---|---|---|---|---|
+| 2001 | 1% | ~0% | 30% | 34% | 35% |
+| 65536 | 0% | 0% | 6% | 16% | 70% |
+
+and the same source on wheels that do not cross themselves (`5 7 9`,
+`7 11 13`, `23 41 61`) gives an even spread across all 24 buckets and
+1521-1528 distinct colours. **The algorithm is not the variable — the shape
+is.** A rasteriser in Python, doing exactly what `draw_curve` does (same runs,
+same hue formula, a plain DDA instead of SDL), reproduces the app's own frame:
+69.6% red against the app's 89%. The code is faithful to the design; the design
+is what fails.
+
+It also has a second face at higher sample counts, which is what a user
+reported as "artefacts above 4000 points": once the samples are closer together
+than a pixel, adjacent pixels along a line are painted by different passes, and
+the picture becomes per-pixel colour noise rather than a gradient. At N=8004
+the parametric rainbow is a speckle of unrelated hues; the same frame on
+`5 7 9` is clean.
+
+The candidate fix is to take the hue from the point's **direction from the
+centre of the figure** instead of from the sample index. Two passes over the
+same place have the same direction, so a later pass paints the same colour on
+top of itself and the gradient survives. It is implemented and reachable with
+`FLOWERY_RAINBOW_MODE=angle`; it is not the default. It does not use `atan2` —
+`|dy|/(|dx|+|dy|)` runs 0..1 across an octant and the signs pick which, which is
+monotone round the circle and costs a divide and a test. What it does cost is
+draw calls: the direction sweeps the whole circle once per turn, so at
+N=262144 the runs would be 166026 without a limit. `MAX_RAINBOW_RUNS` caps them
+at 8192 (a run is not cut for a colour change until it is `m/8192` points long),
+which is about 1.2 ms of drawing at any sample count and leaves the colour per
+point exactly where the curve is coarse enough for that to be what the eye
+sees. At N=8004 it turns the noise into a coherent marbling in one hue family
+rather than fixing it outright — the curve still passes over itself forty times.
+
+### The default renderer went back to GL
+
+Vulkan was made the default for the ten-fold line speed, and on 2026-09-16 it
+was made not the default again, for a reason that took a while to see.
+
+The symptom: past roughly ten thousand samples the HUD comes out smeared across
+the top-left corner, with a stray line running from it toward the curve.
+Offscreen the same build is clean — at N=2001, 16008, 64032, 256128 and
+1024512, at render scale 1 and at a forced scale 2, the top-left corner is
+pixel-identical to the N=2001 frame every time. The frames are fine. What
+identified it was the user saying the artefact **cannot be caught in a
+screenshot**: a screenshot reads a finished buffer, so if the buffer is clean
+and the screen is not, the difference is made between the buffer and the
+screen — swapchain, damage tracking, compositor — and none of the app's own
+geometry, buffers or colours are implicated.
+
+GL is clean on the display, so GL is the default, and it keeps about twice as
+many distinct colours besides (428 against 215 in the same frame). Vulkan
+remains one `SDL_RENDER_DRIVER=vulkan` away. The relevant line at startup is
+Mesa's own: `MESA-INTEL: warning: Haswell Vulkan support is incomplete`.
+
+### What the GL line cost actually is
+
+With GL as the default, the 80 ns a point matters again, so it was measured
+properly — offscreen, 900x900, vsync off, per point, with a `glFinish` where
+there is one to call:
+
+| path | N=262144 | N=1048576 |
+|---|---|---|
+| raw GL, own shader, `glDrawArrays(GL_TRIANGLE_STRIP)`, 2 verts/point | **5.6** | **2.6** |
+| vulkan, `SDL_RenderLines` | 4.8 | 4.8 |
+| GL, `SDL_RenderLines` (the current default) | 69.8 | 72.4 |
+| GL, `SDL_RenderGeometryRaw`, our own vertices, every layout tried | 46.8-53.1 | 52-68 |
+| vulkan, our own geometry | 42.4 | 50.1 |
+
+So the 80 ns is Mesa's `GL_LINE_STRIP`, not OpenGL, and building the triangles
+ourselves removes it — the strip is about twice as fast as Vulkan, not merely
+level with it. Two things close the other doors: `SDL_RenderGeometryRaw`
+without raw GL is only 1.2-1.5x for 90-110 MB of buffers a frame, and on
+**vulkan** our own geometry is 8-11x *worse* than plain `SDL_RenderLines`,
+because SDL transforms vertices on the CPU there. This rewrite is only worth
+anything on GL.
+
+The price is the HUD. After our own GL calls `SDL_RenderDebugText` draws
+nothing — it returns true and sets no error and puts 0 pixels on the screen,
+measured with an isolated probe (491 px of text from a clean GL renderer, 0 px
+after a bare `glUseProgram`/`glBindVertexArray`) — and `SDL_FlushRenderer`, the
+documented "call this between SDL's render API and the low-level API", does not
+repair it from either side. Curve in raw GL and HUD through SDL do not coexist
+in one frame; the HUD would need its own font. The harness that produced the
+table, and the probes that isolated this, are in `tmp/linebench/`.
+
+### The curve and the HUD went into raw GL
+
+Both halves of that were paid. The curve is one
+`glDrawArrays(GL_TRIANGLE_STRIP)` with our own shader, two vertices a point,
+the colour on the vertex and the stroke built in the shader from a per-point
+normal; the HUD is drawn from an atlas cut out of the very font SDL uses for
+its debug text, sampled for alpha only and coloured per vertex. `FLOWERY_DRAW=lines`
+brings back the SDL renderer and every line of the old drawing code; nothing
+else about the app changed.
+
+**The number that matters is not the one in the table above.** That table
+measured *drawing* with the vertex buffer uploaded once, outside the frame
+loop. The app is not that: SDL's line path builds its vertex data again on
+every call, so at N=1048576 `SDL_RenderLines` costs 49.5 ms of **CPU** a frame
+whether or not the curve changed, while the raw path costs 0.037 ms — the strip
+is built and uploaded only when something it is built from changes
+(`vertsDirty`), and an idle frame is one `glDrawArrays` over a resident buffer.
+Same run, offscreen 900x900, scale 1, `FLOWERY_PROFILE=1`, no benchmark, ms:
+
+| N=1048576, curve untouched | kernel | layout | thin | draw | hud | present | total |
+|---|---|---|---|---|---|---|---|
+| raw GL | 0.007 | 0.002 | 0.003 | **0.037** | 0.068 | 0.007 | 0.125 |
+| SDL lines | 0.044 | 0.010 | 0.008 | **49.476** | 0.085 | 1.137 | 50.760 |
+
+That is the whole case for the rewrite, and it is not GPU throughput: it is a
+per-frame CPU cost that disappears. A benchmark does not show it, because
+`FLOWERY_BENCH` forces the curve dirty every frame on purpose — that is the
+worst case, and there the difference is 31.5 ms of draw against 52.5 (total
+55.0 against 73.7). Both numbers are real and they answer different questions.
+`space` dirties the curve every frame, so a running animation lives in the
+worst-case column; a curve you are only looking at lives in the other one.
+
+**Offscreen cannot price the rasteriser.** Nothing here calls `glFinish`, and
+an offscreen swap never blocks, so both columns are CPU time per phase. On the
+display the frame is bounded by the swap, and what the 49.5 ms decides is
+whether vsync is reachable at all: at a million samples the SDL path cannot
+draw a frame inside 16.7 ms, while the raw path leaves the whole budget to the
+GPU.
+
+**What it looks like.** Ink over the curve area, background and the HUD's 24
+rows excluded:
+
+| N | raw GL | SDL lines | GL / lines | old pixels with no new pixel in 1 px |
+|---|---|---|---|---|
+| 2001 | 62359 | 64635 | 96.5% | 1.11% |
+| 262144 | 45883 | 29745 | 154% | 0.00% |
+
+The HUD is not in that table because it is *identical*: 2074 px at N=2001 and
+2065 at N=262144 on both paths, and zero differing pixels between them. The
+atlas reproduces SDL's debug font exactly, down to the pixel, which is the only
+reason the ink comparison above is worth reading at all.
+
+The stroke is `half = 0.5 * width * 1.414` — √2, because that is where a 45°
+diagonal's neighbour pixel falls inside the band. Measured at N=2001 against
+the old line: 1.0 gives 71.3% of the ink and leaves 3.8% of the old pixels
+uncovered, 1.2 gives 83.6% and 2.1%, **1.414 gives 96.6% and 1.1%**, 1.5 gives
+101.7% and 0.9%. So this is the width that agrees with Bresenham best, and the
+price shows on the other side of the table: at N=262144 the curve carries 1.54x
+the ink, which is not a thicker stroke but the diagonal steps Bresenham leaves
+empty, now filled in. Coverage is 100% one way and 98.9% the other, so the two
+pictures are close to the same picture — but this is a *look*, and a look is
+decided by eye on the display, not by a table.
+
+Three traps, all of them measured:
+
+* `SDL_RenderDebugText` into the **software** renderer draws nothing until
+  something calls `SDL_RenderPresent` — SDL's renderers queue and execute at
+  present. 0 of 760 columns before, 563 after. The raw-GL version of the same
+  symptom is the one in the section above; they are different bugs.
+* The two vertex builders count different things: in the strip `k` counts
+  vertices, in the HUD it counts floats. Uploading the HUD with the strip's
+  convention sent about sixteen characters of the status line and nothing else.
+* `glReadPixels` hands its rows over bottom-up, so `FLOWERY_BENCH_BMP` produced
+  a frame mirrored against the one the SDL path writes. Both flip now and the
+  two BMPs compare directly.
+
+**What it costs in memory.** The strip is 9 floats a vertex and 2 vertices a
+point, so 72 bytes a point: 57.8 MB at `drawn` = 802681, and the same again as
+CPU scratch — 116 MB, against roughly 6 MB for the old path. Memory is the
+price of this rewrite; everything above is CPU.
+
+**Not verified, and worth saying before anyone repeats it.** Everything here is
+offscreen at scale 1, and offscreen cannot reproduce the scale-2 path; the only
+scale-dependent piece is the `u_pscale` uniform, which reads the display scale
+the way the rest of the app does. Vsync is untested — `SDL_GL_SetSwapInterval`
+answers "unavailable" offscreen. A run with `FLOWERY_BENCH_BMP` prices
+`glReadPixels` (27 ms at 900x900) inside its `present` column, so those rows are
+not comparable with the rest of the table.
+
 ### Measuring it
 
 The app carries its own harness, because the numbers above are not reproducible
@@ -651,6 +907,9 @@ hand.
   fullscreen size is stable enough to compare two builds.
 * `FLOWERY_BENCH_BMP=<file>` leaves the last frame on disk, which is how the two
   backends were compared pixel by pixel. `FLOWERY_RAINBOW=1` too.
+* `FLOWERY_DRAW=lines` runs the same binary on the old SDL drawing path — the
+  way to check a look or a timing against what was there before. Everything
+  else — the keys, the stroke flags, the rainbow — is shared.
 * A benchmark on the display is listening to the keyboard while it runs. This is
   not theoretical: a `,` typed during a stroke-width run moved the width from 5
   to 1 half way through the measurement, and the run reported the mean of two
@@ -674,7 +933,11 @@ it is the obvious idea and it does not hold.
 
 At N=1048576 on Vulkan the frame is 33.8 ms and it splits 18.5 kernel, 3.9
 layout, 2.7 thin, 5.9 draw, 2.7 present — so the kernel is now well over half of
-it, and it is the one term that has had no attention since the AVX2 port.
+it, and it is the one term that has had no attention since the AVX2 port. On
+the raw GL path the draw term leaves that split altogether in the idle case
+(0.037 ms against 5.9 at the same N), which makes the kernel not just the
+largest term but effectively the whole frame; the work above did not touch what
+this section is about.
 
 It is not obviously broken. `flowery_points` runs 159 instructions per four
 samples, 60 of them FMA, with **zero register spills**, and the clock on this
@@ -747,3 +1010,84 @@ what `SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED` is there for.
 Note that `SDL_SetWindowFullscreen()` needs the event loop to be pumping
 before the compositor's new size arrives; a probe that fullscreens and
 immediately measures still sees the old size.
+
+## Paused work
+
+The tree is dirty on `master` and nothing is committed: `src/main.cpp`,
+`src/flowery.cpp`, `src/flowery.h`, `tests/test_flowery.cpp`, `NOTES.md`,
+`run.sh`. Two threads are open in it.
+
+### The bounding box moved into the kernel — built, not confirmed
+
+`flowery_points()` takes a fourth argument, `double *bbox`, and accumulates
+{minx, miny, maxx, maxy} while it samples. `flowery_bbox()` is still there and
+still returns the same number — min and max are exact and associative, and the
+four AVX2 accumulators are folded down before the scalar tail runs — it is
+simply no longer called by the app; `build_screen_points()` is handed the box
+instead of computing it. The point is to stop reading the two arrays back, 16 MB
+at N=1048576, for something the sampling loop already has in registers.
+
+An agent wrote this and was stopped before it reported. What it left behind is in
+`tmp/bbox/`, and it is more than the write-up suggested: a pre-change binary
+(`tmp/flowery-bbox-before`), eight-run profile logs for both binaries at both
+sample counts, a paired A/B log that alternates the two binaries, and frames from
+each. The binary in the repo root is the **after** build — `./run.sh` launches
+this patch. `tmp/flowery-bbox-before` is the binary the rest of this document was
+measured against.
+
+**What is settled.** The change compiles and links, and it does not alter the
+picture: the before and after frames are **byte-identical** at N=2001 and at
+N=262144, which is the box being bit-exact, not merely close. So the fold is
+correct, and the look is unchanged.
+
+**What is not.** The oracle suite was never run — there is no `594/614` and no
+`passed` anywhere in its logs — so the 0.043 px agreement has not been
+re-checked after this change, and the only guard on the numerics is the pair of
+identical frames above. The profile numbers below are the agent's; I could not
+reproduce them, because building is banned as of 2026-09-17.
+
+**The numbers, and why they do not settle the question.** Layout does get
+cheaper, which is the whole claim, and in the paired A/B log it is consistent:
+at N=1048576, 2.99/3.10/2.89/2.70 -> 2.25/2.89/2.24/2.02 ms, and at N=262144,
+0.81/0.93/0.67/0.66/1.07 -> 0.78/0.54/0.55/0.64/0.79. But the same pairs put the
+**kernel** consistently slower at N=1048576 — 13.86/13.96/13.92/13.79 ->
+14.26/14.58/14.44/14.30, about +0.5 ms every time, which is the cost "What is
+left" predicted when it said the kernel was the wrong side of the port budget to
+add work to. The unpaired batches disagree: there the kernel reads 14.14 against
+14.16 and only layout moves. So the saving is real and the cost is plausible, and
+they are the same size — roughly a wash at N=1048576, which is also what the
+totals show once the draw phase is accounted for.
+
+Treat it as an unconfirmed draw, not a win. It is worth building and reproducing
+before it is kept or dropped, and the honest expectation from both logs is that
+net time will not move; the case for keeping it would be that the layout phase
+gets a fifth cheaper, not that the frame gets faster.
+
+**A trap this left behind.** `thin` is not comparable between the two draw
+paths: at N=1048576 the raw-GL binary reports 5.8-8.0 ms and the SDL-lines
+binary 1.87-1.99 ms for the same phase, because the GL path does work there the
+lines path does not. Comparing phase by phase across `FLOWERY_DRAW` is comparing
+different work, so only compare like with like.
+
+### The next feature — decided, not written
+
+Two additions to `src/main.cpp`, with the choices already made:
+
+1. **The animation moves the wheel radii too.** `space` today only advances
+   `s[k]`. `a[k]` should ride a sine through the **full 0.75..2 range**
+   `randomize_wheels()` uses — centre 1.375, amplitude 0.625 — with a per-wheel
+   phase offset (`k/3`) and a frequency slower than the phase rotation. Without
+   the offset the three radii swell in lockstep and it reads as the whole figure
+   pulsing rather than the wheels breathing. It **overwrites** `a[k]` and stays
+   wherever it is when the animation stops: that is the chosen behaviour, so
+   there is deliberately no undo for the animation itself.
+2. **A history of the randomisations.** `r` snapshots the state before rolling;
+   `z` steps back through the snapshots, `x` steps forward. The snapshot is the
+   **full state**, not just the wheels — wheels plus stroke width, stroke mode,
+   the rainbow flag and the sample count — so `z` also undoes a width or colour
+   change made after a roll. A fresh `r` while stepped back truncates what was
+   in front of it, and the HUD should show the position (`hist 3/7`). That line
+   is already long enough to fall off the right edge at 900x900 (`w=7 wave/12`),
+   so it needs laying out to fit rather than appending to.
+
+Free keys at the time of writing: `z x u i o t w y a d e g j k l m n p`.

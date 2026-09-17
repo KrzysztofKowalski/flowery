@@ -25,8 +25,16 @@ typedef struct {
 } FloweryParams;
 
 /* Sample the curve into xs[]/ys[] (world coordinates). Both arrays must
- * have room for `samples` doubles. */
-void flowery_points(const FloweryParams *p, double *xs, double *ys);
+ * have room for `samples` doubles.
+ *
+ * If `bbox` is not NULL it receives the bounding box of the points just
+ * written, as {minx, miny, maxx, maxy}, accumulated in the same pass: the
+ * arrays are not walked a second time. The value is the one flowery_bbox()
+ * below would return - min and max are exact and associative - so passing
+ * NULL and calling flowery_bbox() afterwards is still a valid, if slower,
+ * way to get it. */
+void flowery_points(const FloweryParams *p, double *xs, double *ys,
+                    double *bbox);
 
 /* Bounding box of a point set. */
 void flowery_bbox(const double *xs, const double *ys, int n,
